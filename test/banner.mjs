@@ -31,7 +31,7 @@ globalThis.fetch = async (url) => String(url).includes('/ack')
   ? { ok: true, json: async () => ({ ok: true }) }
   : { ok: true, json: async () => ({ items: records }) };
 const req = (id) => id === 'react' ? React : { Switch: 'Switch', Button: 'Button' };
-new Function('window', readFileSync('/Users/chi/.dsh/workspace/dsh-pocket-kit/lib/client.js', 'utf8'))(globalThis.window);
+new Function('window', readFileSync(new URL('../lib/client.js', import.meta.url).pathname, 'utf8'))(globalThis.window);
 const mod = captured.factory(req);
 const { RecoveryBanner } = mod.__test;
 const t = (k) => k;

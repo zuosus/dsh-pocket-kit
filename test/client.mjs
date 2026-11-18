@@ -47,7 +47,7 @@ const requireShim = (id) => {
 };
 
 // --- load the bundle ---------------------------------------------------
-const source = readFileSync('/Users/chi/.dsh/workspace/dsh-pocket-kit/lib/client.js', 'utf8');
+const source = readFileSync(new URL('../lib/client.js', import.meta.url).pathname, 'utf8');
 const factory = new Function('window', 'navigator', 'document', 'setInterval', 'clearInterval', source);
 factory(globalThis.window, { clipboard: { writeText: async () => {} } }, undefined, () => 0, () => {});
 check('bundle registered itself', captured !== null);
