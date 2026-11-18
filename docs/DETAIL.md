@@ -2,14 +2,14 @@
 
 `dsh-pocket-kit` (口袋工具箱) is a **collection of independent small features** for DeepSeek
 Harness, not a single-purpose plugin. Each feature has its own switch on the
-plugin's Settings page (`小功能集合` / `Small features`), and every switch is on
+plugin's Settings page (`口袋工具箱` / `Pocket Kit`), and every switch is on
 by default.
 
 Two parts ship together:
 
 | Part | Where | What it is |
 |---|---|---|
-| Directory-picker pin | `cordis.patch.yml` | A patch layer: disables the boot-time auto selector and mounts the in-app **browse** backend plus its client surface. |
+| Directory-picker pin | `cordis.patch.yml` + `lib/features/pin-browse-picker.js` | Patches the boot composition to the in-app **browse** backend by default; the feature module makes the switch actually swap rows at runtime. |
 | Feature collection | `lib/index.js`, `lib/features/*`, `lib/client.js` | A normal Host + Client plugin row. The Host installs the enabled features; the Client contributes the Settings page and the feature surfaces. |
 
 ## Features
@@ -52,7 +52,7 @@ GET  /dsh-pocket-kit/recovered-input?session=<id>
 POST /dsh-pocket-kit/recovered-input/ack   { session, ids }
 ```
 
-### `dsh-pocket-kit` — pinned directory picker (always on)
+### `pinBrowsePicker` — pinned directory picker
 
 DSH's "Add workspace" button hands the flow to whichever directory-picker backend
 occupies the workspace `directoryFlow` slot. The shipped composition mounts
@@ -71,9 +71,13 @@ boot** and picks a backend:
 Because the sample is taken at boot, any change to those inputs between loads — a
 proxy rewriting the bind/authority facts, a Clash fake-ip, a different SSH launch —
 flips the interaction, and "Add workspace" suddenly opens Finder instead of the
-built-in file manager. The patch pins `browse` by disabling the auto row and
-composing the backend + its client surface directly. This part is a patch, not a
-feature, so it has no switch.
+built-in file manager. With the switch **on** (the default), the patch pins
+`browse` by disabling the auto row and composing the backend + its client
+surface directly. Turning it **off** removes those rows and mounts the stock
+auto selector, restoring exactly the behaviour you would get without this
+plugin. The swap uses `ctx.loader.create` / `loader.remove` on the in-memory
+root tree, the same mechanism the stock auto picker uses — no config file is
+rewritten, and the change takes effect without a restart.
 
 ## Adding a feature
 

@@ -45,6 +45,6 @@
     "@deepseek-ai/schemastery": "^3.19.0"
   },
   "scripts": {
-    "test": "node test/host.mjs && node test/config.mjs && node test/client.mjs && node test/render.mjs && node test/banner.mjs && node test/resolve.mjs"
+    "test": "node test/host.mjs && node test/config.mjs && node test/client.mjs && node test/render.mjs && node test/banner.mjs && node test/pin-switch.mjs && node test/resolve.mjs"
   }
 }

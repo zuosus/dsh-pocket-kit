@@ -62,15 +62,15 @@ check('page title', sectionText.includes('page.title'));
 check('page intro', sectionText.includes('page.intro'));
 check('feature label', sectionText.includes('feature.inputRecovery.label'));
 check('feature description', sectionText.includes('feature.inputRecovery.description'));
-check('one switch row', typesOf(section).filter((x) => x === 'Switch').length === 1);
-check('switch starts on', findType(section, 'Switch')?.props.checked === true);
+check('two switch rows', typesOf(section).filter((x) => x === 'Switch').length === 2);
+check('switches start on', flatten(section).filter((n) => typeof n === 'object' && n.type === 'Switch').every((s) => s.props.checked === true));
 
 const offSection = render(FeaturesSection, {
-  useConfig: (sel) => sel({ status: 'ready', writable: true, value: { inputRecovery: false } }),
+  useConfig: (sel) => sel({ status: 'ready', writable: true, value: { pinBrowsePicker: false, inputRecovery: false } }),
   setField: async () => true,
   t,
 });
-check('switch follows config off', findType(offSection, 'Switch')?.props.checked === false);
+check('both switches follow config off', flatten(offSection).filter((n) => typeof n === 'object' && n.type === 'Switch').every((s) => s.props.checked === false));
 
 const readOnlySection = render(FeaturesSection, {
   useConfig: (sel) => sel({ status: 'ready', writable: false, value: { inputRecovery: true } }),
