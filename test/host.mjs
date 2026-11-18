@@ -14,7 +14,7 @@ const check = (name, ok) => {
   else { fail += 1; console.log('  FAIL ' + name); }
 };
 
-check('registry lists both features', FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery');
+check('registry lists every feature', FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery,customLogo');
 check('pin feature is always installed', FEATURES.find((f) => f.id === 'pinBrowsePicker')?.always === true);
 
 const listeners = [];

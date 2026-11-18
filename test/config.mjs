@@ -30,15 +30,15 @@ const on = Config({});
 check('default inputRecovery on', on.inputRecovery.get() === true);
 check('default pinBrowsePicker on', on.pinBrowsePicker.get() === true);
 apply(makeCtx(), on);
-check('default installs both features', installed.length === 2);
+check('default installs every feature', installed.length === 3);
 
 installed.length = 0;
 apply(makeCtx(), Config({ inputRecovery: false }));
-check('inputRecovery off leaves pin feature installed', installed.length === 1);
+check('inputRecovery off leaves the others installed', installed.length === 2);
 
 installed.length = 0;
 apply(makeCtx(), undefined);
-check('undefined config installs defaults', installed.length === 2);
+check('undefined config installs defaults', installed.length === 3);
 
 // live flip: the enabled() predicate reads the reference each time
 installed.length = 0;
@@ -62,7 +62,7 @@ const liveCtx = {
   logger: { warn() {} },
 };
 apply(liveCtx, live);
-check('live: features installed', routes.length === 2);
+check('live: features installed', routes.length === 3);
 
 // turn it off through the volatile write path, then confirm the route answers empty
 live.inputRecovery[live.inputRecovery && Symbol.for('cosmokit.volatile.write')]

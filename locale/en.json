@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Pocket Kit",
-    "description": "A collection of unrelated small features in one plugin, each independently switchable in Settings: recover a user prompt swallowed by a failed turn, and pin the workspace directory picker to the in-app browser.",
+    "description": "A collection of unrelated small features in one plugin, each independently switchable in Settings: recover a user prompt swallowed by a failed turn, pin the workspace directory picker to the in-app browser, and replace the sidebar corner logo with your own image.",
     "detail": "docs/DETAIL.md"
   }
 }

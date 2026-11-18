@@ -10,6 +10,7 @@ Pocket Kit (口袋工具箱) — a small collection of independent [DeepSeek Har
 |---|---|---|
 | Pin directory picker to in-app browse | `pinBrowsePicker` | Keeps *Add workspace* on the built-in directory browser instead of the macOS system file panel (which the stock auto selector picks, and which can flip between launches with proxy/bind changes). Changing this switch requires a DSH restart; turning it off restores the system default on the next start. |
 | Recover swallowed input | `inputRecovery` | When a turn fails (error / interrupted / aborted) after you typed a prompt that was swallowed with it, the text is saved and offered back in the conversation as a restore-to-draft banner. |
+| Replace the corner logo | `customLogo` + `customLogoPath` | Swaps the sidebar's top-left whale mark for your own image (default `~/Downloads/whale-girl.png`). PNG, SVG, WebP and GIF all work — DSH does not require SVG, because the mark is a slot that accepts any element, not a file. Replacing the image file takes effect without a restart. |
 
 Details, HTTP surface and the "how it works" notes live in [docs/DETAIL.md](docs/DETAIL.md).
 
@@ -38,7 +39,7 @@ so too).
 ## Develop
 
 ```sh
-npm test   # six suites: host, config, client, render, banner, pin-switch
+npm test   # nine suites: host, config, client, render, banner, pin-switch, logo, logo-client, resolve
 ```
 
 Add a feature: register it in `lib/features/index.js`, declare its config key in

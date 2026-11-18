@@ -7,7 +7,13 @@ const check = (n, ok) => { if (ok) { pass += 1; console.log('  ok  ' + n); } els
 let hookIndex = 0;
 let hookStore = [];
 const React = {
-  createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat() }),
+  createElement: (type, props, ...children) => {
+    const flat = children.flat();
+    // React puts children on props; the stand-in must too, or a component that
+    // renders props.children would silently see nothing here.
+    const merged = flat.length === 0 ? (props ?? {}) : { ...(props ?? {}), children: flat.length === 1 ? flat[0] : flat };
+    return { type, props: merged, children: flat };
+  },
   Fragment: 'Fragment',
   useState(init) {
     const slot = hookIndex++;
@@ -62,11 +68,11 @@ check('page title', sectionText.includes('page.title'));
 check('page intro', sectionText.includes('page.intro'));
 check('feature label', sectionText.includes('feature.inputRecovery.label'));
 check('feature description', sectionText.includes('feature.inputRecovery.description'));
-check('two switch rows', typesOf(section).filter((x) => x === 'Switch').length === 2);
+check('three switch rows', typesOf(section).filter((x) => x === 'Switch').length === 3);
 check('switches start on', flatten(section).filter((n) => typeof n === 'object' && n.type === 'Switch').every((s) => s.props.checked === true));
 
 const offSection = render(FeaturesSection, {
-  useConfig: (sel) => sel({ status: 'ready', writable: true, value: { pinBrowsePicker: false, inputRecovery: false } }),
+  useConfig: (sel) => sel({ status: 'ready', writable: true, value: { pinBrowsePicker: false, inputRecovery: false, customLogo: false } }),
   setField: async () => true,
   t,
 });

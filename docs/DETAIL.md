@@ -52,6 +52,41 @@ GET  /dsh-pocket-kit/recovered-input?session=<id>
 POST /dsh-pocket-kit/recovered-input/ack   { session, ids }
 ```
 
+### `customLogo` — replace the sidebar's corner logo
+
+The mark in the sidebar's top-left corner is not a bundled asset: the sidebar
+shell declares `sidebar.brand.mark` as a **single-kind slot**, and
+`@deepseek-ai/dsh-client-ui-brand-official` fills it with `<FishLogo/>` at the
+default priority 0. A single slot renders its **lowest-priority** registration,
+so this plugin registers at priority `-1` and wins the corner while the shell
+keeps everything around it — the wordmark (`sidebar.brand.name`), the
+New-Session behaviour, and the collapsed rail are untouched.
+
+**DSH does not require SVG.** The slot owner receives a React node, not a file
+path, so a raster PNG works exactly like an SVG: the mark is an `<img>` over a
+Host-served URL. Converting the image to SVG would have thrown away quality for
+no reason.
+
+The bytes cannot come from the page — the image is a user file under `~/` and a
+browser cannot read local paths — so the Host serves it on one same-origin
+route, fenced with `connection.requestRejection` like the open-in-app routes:
+
+```
+GET /dsh-pocket-kit/logo
+```
+
+| Concern | Behaviour |
+|---|---|
+| Path | `customLogoPath`, default `~/Downloads/whale-girl.png`; a leading `~/` expands to the home directory |
+| Format | PNG, SVG, JPEG, WebP, GIF, AVIF — content type from the file extension |
+| Staleness | Read per request, with an ETag and `no-cache`, so replacing the file changes the picture without a DSH restart |
+| Switch off | Route answers 404 and the mark renders DSH's own `<FishLogo/>` |
+| Unreadable file | Route answers 404 and the mark falls back to DSH's own icon, so the corner is never blank |
+| Fencing | `requestRejection` refuses cross-origin/unauthenticated reads with 401/403 |
+
+Changing the switch and the path is live (both are `volatile` Config fields);
+the Settings row carries a path field plus a *Use default* reset.
+
 ### `pinBrowsePicker` — pinned directory picker
 
 DSH's "Add workspace" button hands the flow to whichever directory-picker backend
@@ -104,6 +139,12 @@ picker for the rest of the session.
      yourFeature: z.boolean().default(true).volatile(),
    })
    ```
+
+   A feature that needs a value beyond its boolean reads it through the third
+   `apply` argument: `feature.apply(ctx, enabled, read)`, where
+   `read(key, fallback)` unwraps a `volatile()` reference. `customLogo` uses it
+   for `customLogoPath`; `apply` also accepts a bare `(ctx, enabled)` feature, so
+   the extra argument is optional.
 
 The Settings page picks the new switch up from the Config schema, so nothing in
 the page needs editing.

@@ -57,7 +57,10 @@ const exported = captured.factory(requireShim);
 check('exports apply', typeof exported.apply === 'function');
 check('exports inject list', Array.isArray(exported.inject));
 check('inject has the settings seats', exported.inject.includes('configForms') && exported.inject.includes('slots'));
-check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery');
+check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery,customLogo');
+check('custom logo is not restart-scoped', exported.FEATURES.find((f) => f.id === 'customLogo')?.restart !== true);
+check('logo route constant', exported.LOGO_ROUTE === '/dsh-pocket-kit/logo');
+check('logo default file', exported.DEFAULT_LOGO_FILE === '~/Downloads/whale-girl.png');
 check('picker feature is restart-scoped', exported.FEATURES.find((f) => f.id === 'pinBrowsePicker')?.restart === true);
 check('input recovery is not restart-scoped', exported.FEATURES.find((f) => f.id === 'inputRecovery')?.restart !== true);
 check('route constants', exported.RECOVERED_PATH === '/dsh-pocket-kit/recovered-input'
@@ -100,10 +103,20 @@ const ctx = {
 };
 exported.apply(ctx);
 check('registers the settings section', registrations.some((r) => r?.name === 'settings.section'));
+check('registers the logo seat', registrations.includes('sidebar.brand.mark'));
 check('registers the composer dock', registrations.some((r) => r?.name === 'conversation.input.dock'));
 check('section id is the namespace', registrations.some((r) => r?.name === 'settings.section' && r.id === 'dsh-pocket-kit'));
 check('registers the nav icon', registrations.some((r) => r?.name === 'settings.section.icon' && r.id === 'dsh-pocket-kit'));
 check('nav icon is an svg component', typeof registrations.find((r) => r?.name === 'settings.section.icon')?.Component === 'function');
+
+// --- the corner logo replaces the shell's mark -------------------------
+const brand = registrations.find((r) => r?.name === 'sidebar.brand.mark');
+check('registers a sidebar brand mark', brand !== undefined);
+check('brand mark id is namespaced', brand?.id === 'dsh-pocket-kit/logo');
+// A single-kind slot renders its LOWEST priority, and the official mark sits at
+// the default 0: -1 is what actually wins the corner.
+check('brand mark shadows the official one', brand?.priority === -1);
+check('brand mark is a component', typeof brand?.Component === 'function');
 
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));
