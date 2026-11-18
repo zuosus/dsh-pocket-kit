@@ -9,7 +9,7 @@ Two parts ship together:
 
 | Part | Where | What it is |
 |---|---|---|
-| Directory-picker pin | `cordis.patch.yml` + `lib/features/pin-browse-picker.js` | Patches the boot composition to the in-app **browse** backend by default; the feature module makes the switch actually swap rows at runtime. |
+| Directory-picker pin | `cordis.patch.yml` + `lib/features/pin-browse-picker.js` | Disables the stock auto row and mounts one interaction pair during Host boot: the in-app **browse** backend by default, or the stock auto selector when the switch is off. |
 | Feature collection | `lib/index.js`, `lib/features/*`, `lib/client.js` | A normal Host + Client plugin row. The Host installs the enabled features; the Client contributes the Settings page and the feature surfaces. |
 
 ## Features
@@ -71,13 +71,25 @@ boot** and picks a backend:
 Because the sample is taken at boot, any change to those inputs between loads — a
 proxy rewriting the bind/authority facts, a Clash fake-ip, a different SSH launch —
 flips the interaction, and "Add workspace" suddenly opens Finder instead of the
-built-in file manager. With the switch **on** (the default), the patch pins
-`browse` by disabling the auto row and composing the backend + its client
-surface directly. Turning it **off** removes those rows and mounts the stock
-auto selector, restoring exactly the behaviour you would get without this
-plugin. The swap uses `ctx.loader.create` / `loader.remove` on the in-memory
-root tree, the same mechanism the stock auto picker uses — no config file is
-rewritten, and the change takes effect without a restart.
+built-in file manager. The patch therefore disables the stock auto row, and this
+feature mounts exactly one interaction during Host boot, the same way the auto
+selector mounts its own pair:
+
+| `pinBrowsePicker` | Mounted rows |
+|---|---|
+| on (default) | `@deepseek-ai/dsh-host-directory-picker-browse` + `@deepseek-ai/dsh-client-ui-directory-picker-browse` |
+| off | `@deepseek-ai/dsh-host-directory-picker-auto`, which resolves and mounts its own pair — exactly the behaviour without this plugin |
+
+**Changing the switch needs a DSH restart.** A picker interaction is a pair: a
+Host backend that registers `ctx.directoryPicker`, and a Client surface that
+fills ui-workspace's directory-flow slot. A page only receives the client
+bundles that were Loader rows when its boot graph was composed, so a surface
+added after the page loaded can never appear in that page — and swapping only
+the Host half would leave the open page driving a capability the Host no longer
+serves. The switch saves immediately (it lands in the profile patch, as
+`pinBrowsePicker: false`) and the Settings row states that a restart applies it.
+The module deliberately keeps no runtime swap: half-applying would break the
+picker for the rest of the session.
 
 ## Adding a feature
 

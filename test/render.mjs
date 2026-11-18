@@ -81,6 +81,16 @@ check('read-only config disables the switch', findType(readOnlySection, 'Switch'
 
 // --- rows --------------------------------------------------------------
 const row = render(FeatureRow, { title: 'T', description: 'D', checked: true, disabled: false, failed: false, onChange: () => {}, t });
+const restartRow = render(FeatureRow, {
+  title: 't', description: 'd', checked: true, disabled: false, failed: false,
+  restart: true, onChange: () => {}, t,
+});
+check('restart row shows the hint', JSON.stringify(restartRow).includes('restartHint'));
+const plainRow = render(FeatureRow, {
+  title: 't', description: 'd', checked: true, disabled: false, failed: false,
+  onChange: () => {}, t,
+});
+check('other rows show no hint', !JSON.stringify(plainRow).includes('restartHint'));
 check('row switch labelled', findType(row, 'Switch')?.props.label === 'T');
 check('row switch has onChange', typeof findType(row, 'Switch')?.props.onChange === 'function');
 const failedRow = render(FeatureRow, { title: 'T', description: 'D', checked: true, disabled: false, failed: true, onChange: () => {}, t });

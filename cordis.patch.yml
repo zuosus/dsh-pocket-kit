@@ -1,41 +1,29 @@
-# Pin the workspace directory picker to the in-app browse backend, and mount
-# this package's own Host/Client plugin body (the small-feature collection).
+# Directory-picker composition for Pocket Kit, plus this package's own
+# Host/Client plugin body (the small-feature collection).
 #
 # dsh-web-app composes `directory-picker` as
 # @deepseek-ai/dsh-host-directory-picker-auto, which samples the host once per
 # boot (bind host, remote-authority trust, SSH launch, display) and mounts
 # either the native OS chooser or the in-app browser. A Clash fake-ip / proxy
-# that changes the effective loopback/bind facts can therefore flip the
+# that changes the effective loopback or bind facts can therefore flip the
 # interaction between launches — the reported symptom is "Add workspace"
 # suddenly opening Finder instead of the built-in file manager.
 #
-# This overlay pins `browse`, the documented way to fix one interaction:
-# disable the auto row and compose the backend + its client surface directly.
-# Both rows are ordinary Loader entries, exactly the pair the auto selector
-# would have mounted itself. Mounting the auto row *and* a backend row is an
-# error (duplicate `directoryPicker` service and a duplicate client flow in a
-# `single` slot), so the auto row must be disabled here, not left alongside.
+# The stock row is disabled here so exactly one interaction is mounted. Which
+# one is chosen by the `pinBrowsePicker` switch in lib/features, during Host
+# boot: the pinned browse pair when it is on (the default), or a fresh mount of
+# the stock auto selector when it is off. Both are ordinary Loader entries; the
+# pair must be mounted together, because the Client surface has to be a row
+# when the page's boot graph is composed.
 
 - id: directory-picker
   name: '@deepseek-ai/dsh-host-directory-picker-auto'
   disabled: true
 
 - insert:
-    # Host half: registers ctx.directoryPicker with the `browse` capability
-    # (one-level listing + child-directory creation over the host filesystem).
-    - id: directory-picker-browse
-      name: '@deepseek-ai/dsh-host-directory-picker-browse'
-
-    # Client half: fills ui-workspace's directory-flow slots with the in-app
-    # browsing dialog. A row with `dsh.client` is picked up by the modules
-    # node half as a browser plugin, the same way the auto selector's mounted
-    # surface was.
-    - id: directory-picker-browse-surface
-      name: '@deepseek-ai/dsh-client-ui-directory-picker-browse'
-
     # This package's own plugin body: the small-feature collection. Its Host
-    # half installs the enabled features (lib/index.js + lib/features/*), and
-    # its `dsh.client` entry contributes the Settings page with one switch per
-    # feature. Every switch defaults to on.
+    # half installs the enabled features (lib/index.js + lib/features/*) and,
+    # with them, the directory-picker composition above; its `dsh.client`
+    # entry contributes the Settings page with one switch per feature.
     - id: dsh-pocket-kit
       name: dsh-pocket-kit

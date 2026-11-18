@@ -58,6 +58,8 @@ check('exports apply', typeof exported.apply === 'function');
 check('exports inject list', Array.isArray(exported.inject));
 check('inject has the settings seats', exported.inject.includes('configForms') && exported.inject.includes('slots'));
 check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery');
+check('picker feature is restart-scoped', exported.FEATURES.find((f) => f.id === 'pinBrowsePicker')?.restart === true);
+check('input recovery is not restart-scoped', exported.FEATURES.find((f) => f.id === 'inputRecovery')?.restart !== true);
 check('route constants', exported.RECOVERED_PATH === '/dsh-pocket-kit/recovered-input'
   && exported.RECOVERED_ACK_PATH === '/dsh-pocket-kit/recovered-input/ack');
 

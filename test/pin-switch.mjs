@@ -3,58 +3,72 @@ import { applyPinBrowsePicker } from '../lib/features/pin-browse-picker.js';
 let pass = 0; let fail = 0;
 const check = (n, ok) => { if (ok) { pass += 1; console.log('  ok  ' + n); } else { fail += 1; console.log('  FAIL ' + n); } };
 
-// Fake loader + ctx that mirror the real loader.create/remove/store contract.
-const store = Object.create(null);
-let seq = 0;
-const events = {};
-const ctx = {
-  loader: {
-    store,
-    async create({ name }) {
-      const id = 'gen-' + (++seq);
-      store[id] = { id, name };
-      return id;
+/** Fake loader mirroring the create/resolve/store/fiber-await contract. */
+function harness() {
+  const store = Object.create(null);
+  const created = [];
+  const ctx = {
+    loader: {
+      store,
+      async create({ id, name }) {
+        if (store[id] !== undefined) throw new Error('duplicate entry ' + id);
+        store[id] = { id, name, fiber: { await: async () => undefined } };
+        created.push(name);
+        return id;
+      },
     },
-    remove(id) { delete store[id]; },
-  },
-  effect(fn) { return fn(); },
-  inject(deps, body) {
-    body({
-      effect(fn) { fn(); },
-      on(evt, cb) { (events[evt] ??= []).push(cb); },
-    });
-  },
-  logger: { warn() {} },
-};
+    inject(deps, body) {
+      // A cordis child ctx inherits the parent's services, so `child.loader`
+      // is the same loader.
+      body({ effect(fn) { return fn(); }, loader: ctx.loader });
+    },
+  };
+  return { ctx, store, created };
+}
 
-let switchOn = true;
-const enabled = () => switchOn;
-applyPinBrowsePicker(ctx, enabled);
+// --- switch on: the pinned browse pair, backend before surface -----------
+{
+  const { ctx, created } = harness();
+  applyPinBrowsePicker(ctx, () => true);
+  await new Promise((r) => setTimeout(r, 20));
+  check('on: two rows mounted', created.length === 2);
+  check('on: backend first', created[0] === '@deepseek-ai/dsh-host-directory-picker-browse');
+  check('on: surface second', created[1] === '@deepseek-ai/dsh-client-ui-directory-picker-browse');
+  check('on: no auto selector', !created.some((n) => n.includes('directory-picker-auto')));
+}
 
-// Wait for the initial async sync to settle.
-await new Promise((r) => setTimeout(r, 20));
+// --- switch off: the stock auto selector, nothing pinned -----------------
+{
+  const { ctx, created, store } = harness();
+  applyPinBrowsePicker(ctx, () => false);
+  await new Promise((r) => setTimeout(r, 20));
+  check('off: exactly one row mounted', created.length === 1);
+  check('off: it is the auto selector', created[0] === '@deepseek-ai/dsh-host-directory-picker-auto');
+  check('off: no pinned browse rows', !created.some((n) => n.includes('-browse')));
+  check('off: mounted row has a stable id', store['directory-picker-auto-mounted'] !== undefined);
+}
 
-// Default on: auto row must not be mounted; browse rows from the patch remain assumed.
-const autoId = Object.values(store).find((e) => e.name.includes('directory-picker-auto'))?.id;
-check('on: no auto picker mounted', autoId === undefined);
+// --- idempotent: a row that already exists is not mounted twice ----------
+{
+  const { ctx, created, store } = harness();
+  store['directory-picker-browse'] = { id: 'directory-picker-browse', name: 'x', fiber: { await: async () => undefined } };
+  applyPinBrowsePicker(ctx, () => true);
+  await new Promise((r) => setTimeout(r, 20));
+  check('existing row is reused', !created.includes('@deepseek-ai/dsh-host-directory-picker-browse'));
+  check('missing row is still mounted', created.includes('@deepseek-ai/dsh-client-ui-directory-picker-browse'));
+}
 
-// Turn it off -> auto gets mounted.
-switchOn = false;
-for (const cb of events['loader/volatile-update'] ?? []) cb();
-await new Promise((r) => setTimeout(r, 20));
-const autoRows = Object.values(store).filter((e) => e.name.includes('directory-picker-auto'));
-check('off: auto picker mounted', autoRows.length === 1);
-
-// Turn it back on -> auto removed.
-switchOn = true;
-for (const cb of events['loader/volatile-update'] ?? []) cb();
-await new Promise((r) => setTimeout(r, 20));
-const autoRows2 = Object.values(store).filter((e) => e.name.includes('directory-picker-auto'));
-check('on again: auto picker removed', autoRows2.length === 0);
-
-// When it re-mounts browse it creates both host + surface rows.
-const browseRows = Object.values(store).filter((e) => e.name.includes('browse'));
-check('on again: browse rows present', browseRows.length === 2);
+// --- read once per boot: a later switch change does not re-compose -------
+{
+  const { ctx, created } = harness();
+  let on = true;
+  applyPinBrowsePicker(ctx, () => on);
+  await new Promise((r) => setTimeout(r, 20));
+  const afterBoot = created.length;
+  on = false;
+  await new Promise((r) => setTimeout(r, 20));
+  check('no live swap after boot', created.length === afterBoot);
+}
 
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));
