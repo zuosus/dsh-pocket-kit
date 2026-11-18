@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Small feature collection (with pinned directory picker)",
-    "description": "Collects several unrelated small features in one plugin, each with its own switch on the Settings page: pinning the workspace directory picker to the in-app browser, and recovering a user prompt that a failed turn swallowed.",
+    "title": "Pocket Kit",
+    "description": "A collection of unrelated small features in one plugin, each independently switchable in Settings: recover a user prompt swallowed by a failed turn, and pin the workspace directory picker to the in-app browser.",
     "detail": "docs/DETAIL.md"
   }
 }

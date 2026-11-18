@@ -46,7 +46,7 @@ let captured = null;
 globalThis.window = { __ModuleLoader__: { load: (spec) => { captured = spec; } } };
 globalThis.fetch = async () => ({ ok: true, json: async () => ({ items: [] }) });
 const req = (id) => id === 'react' ? React : { Switch: 'Switch', Button: 'Button' };
-new Function('window', readFileSync('/Users/chi/.dsh/workspace/pin-browse-picker/lib/client.js', 'utf8'))(globalThis.window);
+new Function('window', readFileSync('/Users/chi/.dsh/workspace/dsh-pocket-kit/lib/client.js', 'utf8'))(globalThis.window);
 const mod = captured.factory(req);
 const { FeaturesSection, FeatureRow, RecoveryBanner } = mod.__test;
 const t = (k, p) => p?.reason ? k + ':' + p.reason : k;
@@ -89,6 +89,10 @@ check('failed row surfaces the error', textOf(failedRow).includes('saveFailed'))
 // --- recovery banner ---------------------------------------------------
 check('no records renders nothing', render(RecoveryBanner, { sessionId: 's1', inputActions: {}, enabled: true, t }).length === 0);
 check('disabled feature renders nothing', render(RecoveryBanner, { sessionId: 's1', inputActions: {}, enabled: false, t }).length === 0);
+const glyph = mod.__test.KitNavIcon({ size: 16 });
+check('nav glyph is an svg', glyph.type === 'svg');
+check('nav glyph uses currentColor', glyph.props.stroke === 'currentColor');
+check('nav glyph has toolbox paths', glyph.children.length === 4);
 
 
 // --- populated banner --------------------------------------------------

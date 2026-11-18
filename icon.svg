@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
-  <!-- In-app browser: a window with a folder inside it, pinned (browse backend). -->
-  <rect x="6.5" y="8.5" width="23" height="19" rx="3.2" stroke="#5B6472" stroke-width="1.8"/>
-  <path d="M6.5 13.2H29.5" stroke="#5B6472" stroke-width="1.8" stroke-linecap="round"/>
-  <circle cx="10.1" cy="10.9" r="1.05" fill="#5B6472"/>
-  <circle cx="13.4" cy="10.9" r="1.05" fill="#5B6472"/>
-  <path d="M12.4 18.1c0-.7.57-1.3 1.3-1.3h2.5l1.2 1.4h4.9c.72 0 1.3.58 1.3 1.3v3.9c0 .72-.58 1.3-1.3 1.3h-8.6c-.73 0-1.3-.58-1.3-1.3v-5.3Z" fill="#3F7FD4"/>
+  <!-- Pocket Kit: a compact toolbox with a handle, shared by both features. -->
+  <rect x="5" y="13" width="26" height="17" rx="3" stroke="#5B6472" stroke-width="1.8"/>
+  <path d="M13 13v-2.2c0-.77.62-1.4 1.4-1.4h7.2c.77 0 1.4.62 1.4 1.4V13" stroke="#5B6472" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M5 19.5h26" stroke="#5B6472" stroke-width="1.8" stroke-linecap="round"/>
+  <rect x="15.4" y="17.2" width="5.2" height="4.2" rx="1" fill="#3F7FD4"/>
+  <path d="M17.2 17.2v4.2M18.8 17.2v4.2" stroke="#fff" stroke-width="0.9"/>
 </svg>

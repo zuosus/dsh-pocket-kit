@@ -4,7 +4,7 @@ import { rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const STORE = join(homedir(), '.dsh', 'pin-browse-picker', 'recovered-input.json');
+const STORE = join(homedir(), '.dsh', 'dsh-pocket-kit', 'recovered-input.json');
 rmSync(STORE, { force: true });
 
 let pass = 0;
@@ -42,7 +42,7 @@ const emit = (sessionId, type, data) => {
 const read = async (sessionId) => {
   const route = routes.find((r) => r.path.endsWith('/recovered-input'));
   const res = { statusCode: 0, setHeader() {}, end(body) { this.body = body ?? ''; } };
-  await route.handler({ method: 'GET', url: '/pin-browse-picker/recovered-input?session=' + sessionId, headers: {} }, res);
+  await route.handler({ method: 'GET', url: '/dsh-pocket-kit/recovered-input?session=' + sessionId, headers: {} }, res);
   return JSON.parse(res.body).items;
 };
 

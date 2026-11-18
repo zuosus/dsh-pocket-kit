@@ -3,7 +3,7 @@ import { Config, apply, name } from '../lib/index.js';
 let pass = 0; let fail = 0;
 const check = (n, ok) => { if (ok) { pass += 1; console.log('  ok  ' + n); } else { fail += 1; console.log('  FAIL ' + n); } };
 
-check('name', name === 'pin-browse-picker');
+check('name', name === 'dsh-pocket-kit');
 
 const installed = [];
 const makeCtx = () => ({
@@ -69,7 +69,7 @@ live.inputRecovery[live.inputRecovery && Symbol.for('cosmokit.volatile.write')]
   : null;
 const readRoute = routes.find((r) => r.path.endsWith('/recovered-input'));
 const res = { statusCode: 0, setHeader() {}, end(body) { this.body = body ?? ''; } };
-await readRoute.handler({ method: 'GET', url: '/pin-browse-picker/recovered-input?session=x', headers: {} }, res);
+await readRoute.handler({ method: 'GET', url: '/dsh-pocket-kit/recovered-input?session=x', headers: {} }, res);
 check('live: off answers empty', JSON.parse(res.body).items.length === 0);
 
 // contained failure

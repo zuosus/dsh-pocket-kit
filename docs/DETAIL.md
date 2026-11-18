@@ -1,6 +1,6 @@
-# Small feature collection
+# Pocket Kit — a small-feature collection
 
-This package is a **collection of independent small features** for DeepSeek
+`dsh-pocket-kit` (口袋工具箱) is a **collection of independent small features** for DeepSeek
 Harness, not a single-purpose plugin. Each feature has its own switch on the
 plugin's Settings page (`小功能集合` / `Small features`), and every switch is on
 by default.
@@ -37,7 +37,7 @@ With this feature on:
   the inbox inserted and which ones a turn claimed, and when a turn ends in
   `error` / `interrupted` / `aborted` without ever logging a claimed message, it
   records the text plus the failure reason;
-- records persist under `~/.dsh/pin-browse-picker/recovered-input.json`, so a
+- records persist under `~/.dsh/dsh-pocket-kit/recovered-input.json`, so a
   Host restart does not lose a pending one;
 - the page polls a same-origin route and shows the recovered text above the
   composer, with **Put it back** (restores the real draft through the Session's
@@ -48,11 +48,11 @@ The two routes are fenced with the composition's `connection.requestRejection`,
 the same Host/Origin plus login-cookie check the open-in-app routes rely on:
 
 ```
-GET  /pin-browse-picker/recovered-input?session=<id>
-POST /pin-browse-picker/recovered-input/ack   { session, ids }
+GET  /dsh-pocket-kit/recovered-input?session=<id>
+POST /dsh-pocket-kit/recovered-input/ack   { session, ids }
 ```
 
-### `pin-browse-picker` — pinned directory picker (always on)
+### `dsh-pocket-kit` — pinned directory picker (always on)
 
 DSH's "Add workspace" button hands the flow to whichever directory-picker backend
 occupies the workspace `directoryFlow` slot. The shipped composition mounts
@@ -95,5 +95,5 @@ the page needs editing.
 ## Install
 
 The package is already linked into the `desktop` profile as
-`link:/Users/chi/.dsh/workspace/pin-browse-picker`. Host-side changes need a DSH
+`link:/Users/chi/.dsh/workspace/dsh-pocket-kit`. Host-side changes need a DSH
 restart; Client-side changes are served from the same bundle on reload.

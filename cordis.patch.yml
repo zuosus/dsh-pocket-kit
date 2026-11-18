@@ -37,5 +37,5 @@
     # half installs the enabled features (lib/index.js + lib/features/*), and
     # its `dsh.client` entry contributes the Settings page with one switch per
     # feature. Every switch defaults to on.
-    - id: pin-browse-picker
-      name: pin-browse-picker
+    - id: dsh-pocket-kit
+      name: dsh-pocket-kit

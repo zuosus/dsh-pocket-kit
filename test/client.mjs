@@ -47,24 +47,24 @@ const requireShim = (id) => {
 };
 
 // --- load the bundle ---------------------------------------------------
-const source = readFileSync('/Users/chi/.dsh/workspace/pin-browse-picker/lib/client.js', 'utf8');
+const source = readFileSync('/Users/chi/.dsh/workspace/dsh-pocket-kit/lib/client.js', 'utf8');
 const factory = new Function('window', 'navigator', 'document', 'setInterval', 'clearInterval', source);
 factory(globalThis.window, { clipboard: { writeText: async () => {} } }, undefined, () => 0, () => {});
 check('bundle registered itself', captured !== null);
-check('loader id', captured?.id === 'pin-browse-picker');
+check('loader id', captured?.id === 'dsh-pocket-kit');
 
 const exported = captured.factory(requireShim);
 check('exports apply', typeof exported.apply === 'function');
 check('exports inject list', Array.isArray(exported.inject));
 check('inject has the settings seats', exported.inject.includes('configForms') && exported.inject.includes('slots'));
 check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'inputRecovery');
-check('route constants', exported.RECOVERED_PATH === '/pin-browse-picker/recovered-input'
-  && exported.RECOVERED_ACK_PATH === '/pin-browse-picker/recovered-input/ack');
+check('route constants', exported.RECOVERED_PATH === '/dsh-pocket-kit/recovered-input'
+  && exported.RECOVERED_ACK_PATH === '/dsh-pocket-kit/recovered-input/ack');
 
 // --- route helpers -----------------------------------------------------
 const items = await exported.fetchRecovered('session-1');
 check('fetch returns items', items.length === 1 && items[0].text === 'hello');
-check('fetch encodes the session', calls.fetch.at(-1).url === '/pin-browse-picker/recovered-input?session=session-1');
+check('fetch encodes the session', calls.fetch.at(-1).url === '/dsh-pocket-kit/recovered-input?session=session-1');
 check('empty session makes no request', (await exported.fetchRecovered('')).length === 0);
 
 await exported.ackRecovered('session-1', ['a:1:m']);
@@ -83,7 +83,7 @@ const ctx = {
   effect(fn) { return fn(); },
   slots: {
     inject(seat, body) { registrations.push(seat); return body(); },
-    register(spec) { registrations.push(spec); return () => {}; },
+    register(spec, Component) { registrations.push({ ...spec, Component }); return () => {}; },
   },
   locale: {
     register() { return () => {}; },
@@ -99,7 +99,9 @@ const ctx = {
 exported.apply(ctx);
 check('registers the settings section', registrations.some((r) => r?.name === 'settings.section'));
 check('registers the composer dock', registrations.some((r) => r?.name === 'conversation.input.dock'));
-check('section id is the namespace', registrations.some((r) => r?.name === 'settings.section' && r.id === 'pin-browse-picker'));
+check('section id is the namespace', registrations.some((r) => r?.name === 'settings.section' && r.id === 'dsh-pocket-kit'));
+check('registers the nav icon', registrations.some((r) => r?.name === 'settings.section.icon' && r.id === 'dsh-pocket-kit'));
+check('nav icon is an svg component', typeof registrations.find((r) => r?.name === 'settings.section.icon')?.Component === 'function');
 
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));
