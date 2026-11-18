@@ -50,7 +50,7 @@ globalThis.fetch = async () => ({ ok: true, json: async () => ({ items: [] }) })
 const req = (id) => id === 'react' ? React : { Switch: 'Switch', Button: 'Button' };
 new Function('window', readFileSync(new URL('../lib/client.js', import.meta.url).pathname, 'utf8'))(globalThis.window);
 const mod = captured.factory(req);
-const { CustomBrandMark, LogoPathField, FeaturesSection } = mod.__test;
+const { CustomBrandMark, FeaturesSection } = mod.__test;
 const t = (k) => k;
 
 // The renderer turns the registration's `hooks.config` into a `useConfig` prop.
@@ -70,9 +70,7 @@ check('mark cannot be dragged out', img?.props.draggable === false);
   hookIndex = 0; hookStore = [];
   const first = CustomBrandMark({ size: 24, useConfig: useConfig({ customLogo: true }) });
   check('mark wires an error handler', typeof first.props.onError === 'function');
-  // The error handler flips local state; simulate the re-render it triggers.
-  const failedState = CustomBrandMark({ size: 24, useConfig: useConfig({ customLogo: true }) });
-  check('mark renders while the image loads', failedState?.type === 'img');
+  check('mark renders while the image loads', first?.type === 'img');
 }
 
 // With the switch off the mark is DSH's own icon again.
@@ -89,69 +87,26 @@ check('mark cannot be dragged out', img?.props.draggable === false);
   check('loading config still renders the image', loading?.type === 'img');
 }
 
-// --- the path field ----------------------------------------------------
-const writes = [];
-const field = render(LogoPathField, {
-  value: '~/Downloads/whale-girl.png', disabled: false, failed: false,
-  onWrite: (v) => { writes.push(v); return Promise.resolve(true); },
-  t,
-});
-const input = find(field, (n) => n.type === 'input');
-check('field renders an input', input !== undefined);
-check('field shows the configured path', input?.props.value === '~/Downloads/whale-girl.png');
-check('field is labelled', input?.props['aria-label'] === 'logo.pathLabel');
-check('field hints at ~/', flatten(field).includes('logo.pathHint'));
-const reset = find(field, (n) => n.type === 'Button');
-check('field offers a reset', reset !== undefined);
-
-// Reset is a no-op when the value is already the default.
-check('reset disabled at default', reset?.props.disabled === true);
-const custom = render(LogoPathField, {
-  value: '/tmp/mine.png', disabled: false, failed: false,
-  onWrite: (v) => { writes.push(v); return Promise.resolve(true); }, t,
-});
-check('reset enabled off-default', find(custom, (n) => n.type === 'Button')?.props.disabled === false);
-
-// Committing the reset writes the default path back.
-const resetBtn = find(custom, (n) => n.type === 'Button');
-resetBtn.props.onClick();
-check('reset writes the default', writes.at(-1) === '~/Downloads/whale-girl.png');
-
-// A refused write surfaces the save error on this field.
-const refused = render(LogoPathField, {
-  value: '/tmp/mine.png', disabled: false, failed: true,
-  onWrite: () => Promise.resolve(false), t,
-});
-check('refused write surfaces an error', flatten(refused).includes('saveFailed'));
-
-// A disabled config disables the input.
-const locked = render(LogoPathField, {
-  value: '~/x.png', disabled: true, failed: false, onWrite: () => Promise.resolve(true), t,
-});
-check('read-only config disables the input', find(locked, (n) => n.type === 'input')?.props.disabled === true);
-
-// --- the settings page carries the field -------------------------------
+// --- the settings page -------------------------------------------------
 const page = render(FeaturesSection, {
-  useConfig: (sel) => sel({ status: 'ready', writable: true, value: { customLogo: true, customLogoPath: '/tmp/a.png' } }),
-  setField: async () => true,
-  t,
-});
-// `render` already returns the flattened tree; flattening it again would
-// revisit each parent's children and double every node.
-const pageInputs = page.filter((n) => typeof n === 'object' && n.type === 'input');
-check('page renders exactly one path input', pageInputs.length === 1);
-check('page input shows the stored path', pageInputs[0]?.props.value === '/tmp/a.png');
-check('page still renders three switches',
-  page.filter((n) => typeof n === 'object' && n.type === 'Switch').length === 3);
-
-// The field follows the default when the config has no path yet.
-const fresh = render(FeaturesSection, {
   useConfig: (sel) => sel({ status: 'ready', writable: true, value: { customLogo: true } }),
   setField: async () => true,
   t,
 });
-check('unset path falls back to the default',
-  fresh.filter((n) => typeof n === 'object' && n.type === 'input')[0]?.props.value === '~/Downloads/whale-girl.png');
+const switches = page.filter((n) => typeof n === 'object' && n.type === 'Switch');
+check('page renders three switches', switches.length === 3);
+check('page renders no inputs (nothing to configure)', page.filter((n) => typeof n === 'object' && n.type === 'input').length === 0);
+check('page shows the logo feature label', page.some((n) => n === 'feature.customLogo.label'));
+check('page shows the logo feature description', page.some((n) => n === 'feature.customLogo.description'));
+
+// Every switch follows the config.
+const off = render(FeaturesSection, {
+  useConfig: (sel) => sel({ status: 'ready', writable: true, value: { customLogo: false, inputRecovery: false, pinBrowsePicker: false } }),
+  setField: async () => true,
+  t,
+});
+check('switches follow config off',
+  off.filter((n) => typeof n === 'object' && n.type === 'Switch').every((s) => s.props.checked === false));
 
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));

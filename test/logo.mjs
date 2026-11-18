@@ -1,34 +1,31 @@
-import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
-import { tmpdir, homedir } from 'node:os';
+import { readFileSync, mkdtempSync, writeFileSync, rmSync, copyFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 let pass = 0; let fail = 0;
 const check = (n, ok) => { if (ok) { pass += 1; console.log('  ok  ' + n); } else { fail += 1; console.log('  FAIL ' + n); } };
 
-// --- fixtures ----------------------------------------------------------
 const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
   'base64',
 );
-const SVG = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8"/></svg>', 'utf8');
-const dir = mkdtempSync(join(tmpdir(), 'pbp-logo-'));
-const pngFile = join(dir, 'whale.png');
-const svgFile = join(dir, 'whale.svg');
-const missingFile = join(dir, 'nope.png');
-writeFileSync(pngFile, PNG);
-writeFileSync(svgFile, SVG);
 
 // --- module under test -------------------------------------------------
 const logo = await import('../lib/features/custom-logo.js');
 
 check('route constant', logo.LOGO_ROUTE === '/dsh-pocket-kit/logo');
-check('default file is the whale-girl download', logo.DEFAULT_LOGO_FILE === '~/Downloads/whale-girl.png');
 
-check('expandHome resolves ~', logo.expandHome('~/Downloads/whale-girl.png') === join(homedir(), 'Downloads', 'whale-girl.png'));
-check('expandHome keeps absolute paths', logo.expandHome('/tmp/a.png') === '/tmp/a.png');
-check('expandHome only rewrites a leading ~/', logo.expandHome('/tmp/~x.png') === '/tmp/~x.png');
+// The logo ships with the package: one fixed image, no user configuration.
+check('bundled logo is an absolute path', typeof logo.BUNDLED_LOGO === 'string' && logo.BUNDLED_LOGO.startsWith('/'));
+check('bundled logo lives in this package', logo.BUNDLED_LOGO.endsWith('/lib/assets/whale-girl.png'));
+check('bundled logo exists on disk', (() => { try { return readFileSync(logo.BUNDLED_LOGO).length > 0; } catch { return false; } })());
+check('bundled logo is a png', (() => {
+  const head = readFileSync(logo.BUNDLED_LOGO).subarray(1, 4).toString('ascii');
+  return head === 'PNG';
+})());
 
-check('png mime', logo.logoMime('a.png') === 'image/png');
+check('logo mime', logo.logoMime('a.png') === 'image/png');
 check('svg mime', logo.logoMime('a.SVG') === 'image/svg+xml');
 check('unknown mime falls back', logo.logoMime('a.bin') === 'application/octet-stream');
 
@@ -50,12 +47,6 @@ function harness(options = {}) {
   return { ctx, routes };
 }
 
-const read = (file, extra = {}) => (key, fallback) => {
-  if (key === 'customLogoPath' && file !== undefined) return file;
-  if (key in extra) return extra[key];
-  return fallback;
-};
-
 function request(route, { method = 'GET', headers = {} } = {}) {
   const res = {
     statusCode: 0,
@@ -70,7 +61,7 @@ function request(route, { method = 'GET', headers = {} } = {}) {
 // --- route registration ------------------------------------------------
 {
   const { ctx, routes } = harness();
-  logo.applyCustomLogo(ctx, () => true, read(pngFile));
+  logo.applyCustomLogo(ctx, () => true);
   check('registers exactly one route', routes.length === 1);
   check('route is exact and at the logo path', routes[0]?.kind === 'exact' && routes[0]?.path === logo.LOGO_ROUTE);
 }
@@ -78,12 +69,13 @@ function request(route, { method = 'GET', headers = {} } = {}) {
 // --- serving -----------------------------------------------------------
 {
   const { ctx, routes } = harness();
-  logo.applyCustomLogo(ctx, () => true, read(pngFile));
+  logo.applyCustomLogo(ctx, () => true);
   const res = await request(routes[0]);
+  const bundled = readFileSync(logo.BUNDLED_LOGO);
   check('serves 200', res.statusCode === 200);
-  check('serves the file bytes', Buffer.compare(Buffer.from(res.body), PNG) === 0);
+  check('serves the bundled bytes', Buffer.compare(Buffer.from(res.body), bundled) === 0);
   check('sends the png content type', res.headers['content-type'] === 'image/png');
-  check('sends a content length', String(res.headers['content-length']) === String(PNG.length));
+  check('sends a content length', String(res.headers['content-length']) === String(bundled.length));
   check('sends an etag', typeof res.headers.etag === 'string' && res.headers.etag.length > 2);
   check('revalidates instead of pinning', res.headers['cache-control'] === 'no-cache');
 
@@ -92,54 +84,48 @@ function request(route, { method = 'GET', headers = {} } = {}) {
   check('304 carries no body', again.body === '');
 }
 
-// --- an svg source is served as svg ------------------------------------
-{
-  const { ctx, routes } = harness();
-  logo.applyCustomLogo(ctx, () => true, read(svgFile));
-  const res = await request(routes[0]);
-  check('svg served as image/svg+xml', res.headers['content-type'] === 'image/svg+xml');
-  check('svg bytes preserved', Buffer.from(res.body).toString('utf8') === SVG.toString('utf8'));
-}
-
 // --- failure paths -----------------------------------------------------
 {
   const { ctx, routes } = harness();
-  logo.applyCustomLogo(ctx, () => true, read(missingFile));
-  check('missing file answers 404', (await request(routes[0])).statusCode === 404);
-}
-{
-  const { ctx, routes } = harness();
-  logo.applyCustomLogo(ctx, () => false, read(pngFile));
+  logo.applyCustomLogo(ctx, () => false);
   check('switch off answers 404', (await request(routes[0])).statusCode === 404);
 }
 {
   const { ctx, routes } = harness();
-  logo.applyCustomLogo(ctx, () => true, read(pngFile));
+  logo.applyCustomLogo(ctx, () => true);
   const res = await request(routes[0], { method: 'POST' });
   check('non-GET answers 405', res.statusCode === 405);
   check('405 advertises GET', res.headers.allow === 'GET');
 }
 {
   const { ctx, routes } = harness({ rejection: () => 401 });
-  logo.applyCustomLogo(ctx, () => true, read(pngFile));
+  logo.applyCustomLogo(ctx, () => true);
   const res = await request(routes[0]);
   check('fenced request answers 401', res.statusCode === 401);
   check('fenced request leaks no bytes', res.body === '');
 }
 
-// --- the configured path drives the served file ------------------------
+// A missing bundled file must degrade to a 404, never to a crash.
 {
+  const dir = mkdtempSync(join(tmpdir(), 'pbp-logo-'));
+  const gone = join(dir, 'gone.png');
   const { ctx, routes } = harness();
-  const seen = [];
-  logo.applyCustomLogo(ctx, () => true, (key, fallback) => {
-    seen.push(key);
-    return key === 'customLogoPath' ? pngFile : fallback;
-  });
-  await request(routes[0]);
-  check('reads the configured path key', seen.includes('customLogoPath'));
+  logo.applyCustomLogo(ctx, () => true, gone);
+  check('missing file answers 404', (await request(routes[0])).statusCode === 404);
+  rmSync(dir, { recursive: true, force: true });
 }
 
-rmSync(dir, { recursive: true, force: true });
+// The optional path argument exists for tests only; production passes nothing.
+{
+  const dir = mkdtempSync(join(tmpdir(), 'pbp-logo2-'));
+  const alt = join(dir, 'alt.svg');
+  writeFileSync(alt, '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>');
+  const { ctx, routes } = harness();
+  logo.applyCustomLogo(ctx, () => true, alt);
+  const res = await request(routes[0]);
+  check('an svg source is served as svg', res.headers['content-type'] === 'image/svg+xml');
+  rmSync(dir, { recursive: true, force: true });
+}
 
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));

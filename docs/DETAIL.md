@@ -67,9 +67,15 @@ path, so a raster PNG works exactly like an SVG: the mark is an `<img>` over a
 Host-served URL. Converting the image to SVG would have thrown away quality for
 no reason.
 
-The bytes cannot come from the page — the image is a user file under `~/` and a
-browser cannot read local paths — so the Host serves it on one same-origin
-route, fenced with `connection.requestRejection` like the open-in-app routes:
+**The artwork ships with the package.** `lib/assets/whale-girl.png` is part of
+the plugin, not a preference: the feature exists to put one fixed, reviewed
+piece of artwork in the corner, so there is no path field and nothing to point
+at the wrong file. Swapping the picture means replacing that file in the
+package.
+
+The bytes cannot come from the page — a browser cannot read a path inside an
+installed package — so the Host serves them on one same-origin route, fenced
+with `connection.requestRejection` like the open-in-app routes:
 
 ```
 GET /dsh-pocket-kit/logo
@@ -77,15 +83,15 @@ GET /dsh-pocket-kit/logo
 
 | Concern | Behaviour |
 |---|---|
-| Path | `customLogoPath`, default `~/Downloads/whale-girl.png`; a leading `~/` expands to the home directory |
-| Format | PNG, SVG, JPEG, WebP, GIF, AVIF — content type from the file extension |
-| Staleness | Read per request, with an ETag and `no-cache`, so replacing the file changes the picture without a DSH restart |
+| Image | `lib/assets/whale-girl.png`, 256×256 RGBA, shipped in `files` via `lib` |
+| Format | Content type from the file extension (PNG, SVG, JPEG, WebP, GIF, AVIF) |
+| Staleness | Read per request, with an ETag and `no-cache`, so replacing the asset changes the picture instead of being pinned by the browser |
 | Switch off | Route answers 404 and the mark renders DSH's own `<FishLogo/>` |
 | Unreadable file | Route answers 404 and the mark falls back to DSH's own icon, so the corner is never blank |
 | Fencing | `requestRejection` refuses cross-origin/unauthenticated reads with 401/403 |
 
-Changing the switch and the path is live (both are `volatile` Config fields);
-the Settings row carries a path field plus a *Use default* reset.
+The switch is a live `volatile` Config field: turning it off restores the native
+mark immediately, with no restart.
 
 ### `pinBrowsePicker` — pinned directory picker
 
@@ -140,11 +146,6 @@ picker for the rest of the session.
    })
    ```
 
-   A feature that needs a value beyond its boolean reads it through the third
-   `apply` argument: `feature.apply(ctx, enabled, read)`, where
-   `read(key, fallback)` unwraps a `volatile()` reference. `customLogo` uses it
-   for `customLogoPath`; `apply` also accepts a bare `(ctx, enabled)` feature, so
-   the extra argument is optional.
 
 The Settings page picks the new switch up from the Config schema, so nothing in
 the page needs editing.

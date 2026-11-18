@@ -60,7 +60,7 @@ check('inject has the settings seats', exported.inject.includes('configForms') &
 check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery,customLogo');
 check('custom logo is not restart-scoped', exported.FEATURES.find((f) => f.id === 'customLogo')?.restart !== true);
 check('logo route constant', exported.LOGO_ROUTE === '/dsh-pocket-kit/logo');
-check('logo default file', exported.DEFAULT_LOGO_FILE === '~/Downloads/whale-girl.png');
+check('logo route is the only logo export', exported.DEFAULT_LOGO_FILE === undefined);
 check('picker feature is restart-scoped', exported.FEATURES.find((f) => f.id === 'pinBrowsePicker')?.restart === true);
 check('input recovery is not restart-scoped', exported.FEATURES.find((f) => f.id === 'inputRecovery')?.restart !== true);
 check('route constants', exported.RECOVERED_PATH === '/dsh-pocket-kit/recovered-input'
