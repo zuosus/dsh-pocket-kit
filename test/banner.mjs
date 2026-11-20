@@ -34,7 +34,7 @@ const req = (id) => id === 'react' ? React : { Switch: 'Switch', Button: 'Button
 new Function('window', readFileSync(new URL('../lib/client.js', import.meta.url).pathname, 'utf8'))(globalThis.window);
 const mod = captured.factory(req);
 const { RecoveryBanner } = mod.__test;
-const t = (k) => k;
+const t = (k, p) => p?.count !== undefined ? k + ':' + p.count : p?.reason ? k + ':' + p.reason : k;
 
 // The banner fills itself from an effect the stand-in does not run, so seed the
 // state through a first render and then read the tree it produced.
@@ -53,6 +53,24 @@ check('offers dismiss', withDraft.some((n) => n === 'recovery.dismiss'));
 const withoutDraft = renderBanner({});
 check('no restore without a draft seat', !withoutDraft.some((n) => n === 'recovery.restore'));
 check('still offers copy', withoutDraft.some((n) => n === 'recovery.copy'));
+
+// --- banner hierarchy --------------------------------------------------
+const byClass = (nodes, name) => nodes.find((n) => typeof n === 'object' && String(n.props?.className ?? '').split(' ').includes(name));
+const buttonWith = (nodes, label) => nodes.find((n) => typeof n === 'object' && n.type === 'Button' && flatten([n]).includes(label));
+const textIn = (node) => flatten([node]).filter((n) => typeof n === 'string').join(' ');
+
+const card = byClass(withDraft, 'pbp-recovery');
+check('one quiet card wrapper', card !== undefined);
+check('header eyebrow names the recovered input', textIn(byClass(withDraft, 'pbp-recoveryEyebrow')) === 'recovery.eyebrow');
+check('title carries the message', textIn(byClass(withDraft, 'pbp-recoveryTitle')) === 'recovery.head');
+check('header icon is decorative', byClass(withDraft, 'pbp-recoveryBadge')?.props['aria-hidden'] === true);
+check('meta shows the size', textIn(byClass(withDraft, 'pbp-recoveryMeta')) === 'recovery.size:20');
+check('prompt sits in a quoted preview', byClass(withDraft, 'pbp-recoveryPreview') !== undefined);
+check('cause is separated from the message', textIn(byClass(withDraft, 'pbp-recoveryCauseText')) === 'boom');
+check('cause label is its own line', textIn(byClass(withDraft, 'pbp-recoveryCauseLabel')) === 'recovery.reasonLabel');
+check('restore is the primary action', buttonWith(withDraft, 'recovery.restore')?.props.variant === 'primary');
+check('copy is a quiet action', buttonWith(withDraft, 'recovery.copy')?.props.variant === 'ghost');
+check('dismiss is a quiet action', buttonWith(withDraft, 'recovery.dismiss')?.props.variant === 'ghost');
 
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));
