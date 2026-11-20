@@ -57,7 +57,7 @@ const exported = captured.factory(requireShim);
 check('exports apply', typeof exported.apply === 'function');
 check('exports inject list', Array.isArray(exported.inject));
 check('inject has the settings seats', exported.inject.includes('configForms') && exported.inject.includes('slots'));
-check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery,customLogo,forceSystemModelPicker');
+check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'customLogo,pinBrowsePicker,forceSystemModelPicker,inputRecovery');
 check('the force-system switch is restart-scoped', exported.FEATURES.find((f) => f.id === 'forceSystemModelPicker')?.restart === true);
 check('custom logo is not restart-scoped', exported.FEATURES.find((f) => f.id === 'customLogo')?.restart !== true);
 check('logo route constant', exported.LOGO_ROUTE === '/dsh-pocket-kit/logo');
