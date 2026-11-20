@@ -1,11 +1,23 @@
 import { FEATURES } from '../lib/features/index.js';
+import { resolvePluginDir } from '../lib/plugin-dir.js';
 import { applyInputRecovery } from '../lib/features/input-recovery.js';
-import { rmSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const STORE = join(homedir(), '.dsh', 'dsh-pocket-kit', 'recovered-input.json');
-rmSync(STORE, { force: true });
+// This suite records real recoveries, so it must never point at the developer's
+// own store: a temp $DSH_HOME isolates it, and the cleanup below only ever
+// touches that temp directory.
+const HOME = mkdtempSync(join(tmpdir(), 'pbk-host-'));
+process.env.DSH_HOME = HOME;
+
+const PLUGIN_DIR = resolvePluginDir();
+const STORE = join(PLUGIN_DIR, 'recovered-input.json');
+
+// A store left over from the old address must be moved before the first read.
+const LEGACY = join(HOME, 'dsh-pocket-kit');
+mkdirSync(LEGACY, { recursive: true });
+writeFileSync(join(LEGACY, 'recovered-input.json'), JSON.stringify({}), 'utf8');
 
 let pass = 0;
 let fail = 0;
@@ -35,6 +47,11 @@ const ctx = {
 applyInputRecovery(ctx, () => true);
 check('one session/event listener', listeners.length === 1);
 check('two routes', routes.length === 2);
+
+// The one-time move ran before the store was read: the old address is gone and
+// the store now lives under $DSH_HOME/plugins/dsh-pocket-kit.
+check('the store lives under $DSH_HOME/plugins', STORE === join(HOME, 'plugins', 'dsh-pocket-kit', 'recovered-input.json'));
+check('the legacy directory was moved away', existsSync(LEGACY) === false);
 
 const emit = (sessionId, type, data) => {
   for (const listener of listeners) listener({ id: sessionId }, { type, data, seq: 0, time: 0 });
@@ -79,6 +96,13 @@ check('reason surfaced', items[0]?.reason === 'scope.tools.presentAs is not a fu
 check('turn recorded', items[0]?.turn === 1);
 check('stable id', items[0]?.id === sid + ':1:msg-1');
 
+// Persistence goes to the new directory, not the old one.
+const persisted = (() => {
+  try { return JSON.parse(readFileSync(STORE, 'utf8')); } catch { return undefined; }
+})();
+check('recovery is persisted under $DSH_HOME/plugins', persisted?.[sid]?.[0]?.text === text);
+check('nothing is written to the legacy path', existsSync(join(LEGACY, 'recovered-input.json')) === false);
+
 check('ack accepted', await ack(sid, [items[0].id]) === 200);
 check('ack clears it', (await read(sid)).length === 0);
 
@@ -114,6 +138,9 @@ emit(sid4, 'turn/start', { turn: 1 });
 emit(sid4, 'agent/inbox/spliced', { target: 'next-turn', start: 0, removedCount: 1, inserted: [] });
 emit(sid4, 'turn/end', { turn: 1, reason: { kind: 'error', error: { message: 'boom' } } });
 check('non-human source ignored', (await read(sid4)).length === 0);
+
+// Only the temp home this suite created is removed.
+rmSync(HOME, { recursive: true, force: true });
 
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));

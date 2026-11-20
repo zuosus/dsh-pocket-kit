@@ -14,7 +14,7 @@ Pocket Kit（口袋工具箱）— 一组彼此独立的 [DeepSeek Harness](http
 
 ### 找回被吞掉的输入 —— `inputRecovery`
 
-当某一轮在失败（error / interrupted / aborted）前已经吞掉了你发出的提示时，文字会被保存，并以「放回输入框」横幅重新显示在对话里。
+当某一轮在失败（error / interrupted / aborted）前已经吞掉了你发出的提示时，文字会被保存，并以「放回输入框」横幅重新显示在对话里。记录存在 `$DSH_HOME/plugins/dsh-pocket-kit/recovered-input.json`（`DSH_HOME` 未设置时才回退到 `~/.dsh`）；旧地址 `$DSH_HOME/dsh-pocket-kit/` 里的数据会在启动时一次性搬过去。
 
 [![输入框上方的找回输入横幅](lib/assets/lost-input.png)](lib/assets/lost-input.png)
 
@@ -49,7 +49,7 @@ Pocket Kit（口袋工具箱）— 一组彼此独立的 [DeepSeek Harness](http
 ## 开发
 
 ```sh
-npm test   # 九个测试套件：host、config、client、render、banner、pin-switch、logo、logo-client、resolve
+npm test   # 十二个测试套件：host、config、client、render、banner、pin-switch、logo、logo-client、resolve、force-native-host、plugin-dir、store-path
 ```
 
 新增功能：在 `lib/features/index.js` 中注册，在 `lib/index.js` 中声明配置键（`z.boolean().default(true).volatile()`），并把文案键加入客户端的字典。详见 [docs/DETAIL.md](docs/DETAIL.md#adding-a-feature)。

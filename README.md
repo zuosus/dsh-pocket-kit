@@ -14,7 +14,7 @@ Keeps *Add workspace* on the built-in directory browser instead of the macOS sys
 
 ### Recover swallowed input — `inputRecovery`
 
-When a turn fails (error / interrupted / aborted) after you typed a prompt that was swallowed with it, the text is saved and offered back in the conversation as a restore-to-draft banner.
+When a turn fails (error / interrupted / aborted) after you typed a prompt that was swallowed with it, the text is saved and offered back in the conversation as a restore-to-draft banner. Records live in `$DSH_HOME/plugins/dsh-pocket-kit/recovered-input.json` (`~/.dsh` is only the fallback when `DSH_HOME` is unset); data left at the old `$DSH_HOME/dsh-pocket-kit/` address is moved there once at startup.
 
 [![Recovered-input banner above the composer](lib/assets/lost-input.png)](lib/assets/lost-input.png)
 
@@ -62,7 +62,7 @@ restart DSH (the Settings row says so too).
 ## Develop
 
 ```sh
-npm test   # ten suites: host, config, client, render, banner, pin-switch, logo, logo-client, resolve, force-native-host
+npm test   # twelve suites: host, config, client, render, banner, pin-switch, logo, logo-client, resolve, force-native-host, plugin-dir, store-path
 ```
 
 Add a feature: register it in `lib/features/index.js`, declare its config key in

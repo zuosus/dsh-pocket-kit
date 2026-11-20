@@ -37,8 +37,10 @@ With this feature on:
   the inbox inserted and which ones a turn claimed, and when a turn ends in
   `error` / `interrupted` / `aborted` without ever logging a claimed message, it
   records the text plus the failure reason;
-- records persist under `~/.dsh/dsh-pocket-kit/recovered-input.json`, so a
-  Host restart does not lose a pending one;
+- records persist under `$DSH_HOME/plugins/dsh-pocket-kit/recovered-input.json`
+  (`~/.dsh` is only the fallback when `DSH_HOME` is unset), so a Host restart
+  does not lose a pending one. A store left at the pre-`plugins/` address
+  `$DSH_HOME/dsh-pocket-kit/` is moved there once, at startup;
 - the page polls a same-origin route and shows the recovered text above the
   composer, with **Put it back** (restores the real draft through the Session's
   own input actions, undo stack included), **Copy** (clipboard fallback) and
@@ -51,6 +53,27 @@ the same Host/Origin plus login-cookie check the open-in-app routes rely on:
 GET  /dsh-pocket-kit/recovered-input?session=<id>
 POST /dsh-pocket-kit/recovered-input/ack   { session, ids }
 ```
+### Where plugin data lives
+
+Every file this package owns goes in **its own directory under
+`$DSH_HOME/plugins/`**, next to the other plugins' data
+(`$DSH_HOME/plugins/dsh-generative-ui/`, `…/dsh-model-flatmap/`):
+
+| Concern | Behaviour |
+|---|---|
+| Address | `<DSH_HOME>/plugins/dsh-pocket-kit/` — `lib/plugin-dir.js` resolves it |
+| `$DSH_HOME` | wins over `~/.dsh`; a blank value counts as unset; `~` expands; a relative value is normalised to absolute |
+| Store file | `recovered-input.json`, resolved per call (`resolveStorePath()`), not at import time |
+| One-time move | `<DSH_HOME>/dsh-pocket-kit/` → `<DSH_HOME>/plugins/dsh-pocket-kit/`, at `apply()`, before anything is read |
+| New address exists | nothing happens — a move never overwrites and never merges, not even into an empty directory |
+| Old address absent | nothing happens (the normal state of a fresh install) |
+| Move fails | swallowed and logged; the feature keeps reading the **old** address, so a pending recovery is never lost |
+| Idempotent | a second run finds the move done and does no I/O |
+
+The move is `rename` first (cheap, same filesystem) and falls back to a
+recursive copy plus delete on `EXDEV` — `$DSH_HOME` can span mount points, and
+then no inode can be shared. It runs synchronously because `apply()` is a
+synchronous Host hook and the store must be in place before the first read.
 
 ### `customLogo` — replace the sidebar's corner logo
 

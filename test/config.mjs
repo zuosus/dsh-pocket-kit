@@ -1,4 +1,14 @@
-import { Config, apply, name } from '../lib/index.js';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+// `apply()` performs the one-time move of this package's data directory, so it
+// must run against a temp DSH home. Setting the env before the dynamic import is
+// what makes that stick: a static import would hoist above this line.
+const HOME = mkdtempSync(join(tmpdir(), 'pbk-config-'));
+process.env.DSH_HOME = HOME;
+
+const { Config, apply, name } = await import('../lib/index.js');
 
 let pass = 0; let fail = 0;
 const check = (n, ok) => { if (ok) { pass += 1; console.log('  ok  ' + n); } else { fail += 1; console.log('  FAIL ' + n); } };
@@ -99,6 +109,9 @@ let threw = false;
 try { apply(makeCtx(), Config({})); } catch { threw = true; }
 FEATURES[0].apply = original;
 check('a failing feature is contained', threw === false);
+
+// Only the temp home this suite created is removed.
+rmSync(HOME, { recursive: true, force: true });
 
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));
