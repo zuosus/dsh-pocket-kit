@@ -44,15 +44,15 @@ Pocket Kit（口袋工具箱）— 一组彼此独立的 [DeepSeek Harness](http
 
 如果要在本地 checkout 上开发，把版本号换成 `link:/path/to/dsh-pocket-kit` 即可。
 
-随包提供的 `cordis.patch.yml` 会在启动时固定目录选择器。大多数功能开关会在配置变更后立即生效，但 `pinBrowsePicker` 是例外：目录选择器是启动时挂载的 Host 后端 + Client 界面组合，切换后需要重启 DSH 才会生效（设置页中对应行也会提示这一点）。
+每个功能开关都保存在插件自己的配置文件 `$DSH_HOME/plugins/dsh-pocket-kit/config.yaml` 里，由设置页通过 Host 读写。它既不存放在浏览器里（Web GUI 每次启动都换端口，浏览器存储会因此清空），也不存放在 profile 补丁里（那份文件人人都能改）。大多数开关改动后立即生效，但 `pinBrowsePicker` 是例外：目录选择器是启动时挂载的 Host 后端 + Client 界面组合，切换后需要重启 DSH 才会生效（设置页中对应行也会提示这一点）。
 
 ## 开发
 
 ```sh
-npm test   # 十二个测试套件：host、config、client、render、banner、pin-switch、logo、logo-client、resolve、force-native-host、plugin-dir、store-path
+npm test   # 十四个测试套件：host、config、client、render、banner、pin-switch、logo、logo-client、resolve、force-native-host、plugin-dir、store-path、switches、switches-client
 ```
 
-新增功能：在 `lib/features/index.js` 中注册，在 `lib/index.js` 中声明配置键（`z.boolean().default(true).volatile()`），并把文案键加入客户端的字典。详见 [docs/DETAIL.md](docs/DETAIL.md#adding-a-feature)。
+新增功能：在 `lib/features/index.js` 中注册，把开关名加入 `lib/config-file.js` 的 `SWITCH_KEYS`，并把文案键加入客户端的字典。详见 [docs/DETAIL.md](docs/DETAIL.md#adding-a-feature)。
 
 ## 许可证
 

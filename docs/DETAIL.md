@@ -75,6 +75,47 @@ recursive copy plus delete on `EXDEV` — `$DSH_HOME` can span mount points, and
 then no inode can be shared. It runs synchronously because `apply()` is a
 synchronous Host hook and the store must be in place before the first read.
 
+### Where a switch lives
+
+A feature switch is a boolean in the plugin's own config file,
+`$DSH_HOME/plugins/dsh-pocket-kit/config.yaml` (`lib/config-file.js`). The
+Settings page reads and writes it through the Host's
+`/dsh-pocket-kit/switches` route, so the file is the single source of truth for
+both halves.
+
+**Why not the profile patch.** The switches used to be Host Config fields, so the
+Settings page wrote them through `configForms` and they landed in the profile's
+`cordis.patch.yml`. That file is the patch layer for the whole profile — the app,
+other plugins and hand edits all touch it — so flipping one switch meant opening a
+file where every other entry is also editable, and it was not ours to back up or
+migrate.
+
+**Why not localStorage.** The Web GUI's port changes on every launch, and
+localStorage is origin-scoped (scheme + host + port), so a browser store starts
+empty after a restart and the switches would silently reset.
+
+| Concern | Behaviour |
+|---|---|
+| Precedence | Config defaults < profile patch (`cordis.patch.yml`) < this file |
+| Why the file wins | It is the user's most explicit, most recent statement — what the Settings page writes |
+| Key the file omits | Falls back to the patch, so an existing install keeps its behaviour across the upgrade |
+| Missing file | Normal and silent: the zero-config user sees nothing |
+| Malformed file | Reported, not swallowed — "I changed it and nothing happened" is the hardest failure to self-diagnose |
+| Non-boolean value | Reported and skipped, so one bad line cannot take the other switches down |
+| Near-miss key | Named as a probable typo (`customlogo` → did you mean `customLogo`?) |
+| Write | Atomic (temp file + rename), preserves comments and key order, mode `0600` |
+| Read | Cached in the Host (`createSwitchStore`) and in the page (one shared cache), so a write is visible to every feature on its next check |
+
+```yaml
+# $DSH_HOME/plugins/dsh-pocket-kit/config.yaml
+customLogo: false
+inputRecovery: true
+```
+
+Delete a key to fall back to the default; a hand-edited value takes effect the
+next time a feature reads it (immediately for the live switches, after a restart
+for `pinBrowsePicker` and `forceSystemModelPicker`).
+
 ### `customLogo` — replace the sidebar's corner logo
 
 The mark in the sidebar's top-left corner is not a bundled asset: the sidebar
@@ -113,8 +154,8 @@ GET /dsh-pocket-kit/logo
 | Unreadable file | Route answers 404 and the mark falls back to DSH's own icon, so the corner is never blank |
 | Fencing | `requestRejection` refuses cross-origin/unauthenticated reads with 401/403 |
 
-The switch is a live `volatile` Config field: turning it off restores the native
-mark immediately, with no restart.
+The switch lives in the plugin's own config file (see `lib/config-file.js`), so
+turning it off restores the native mark immediately, with no restart.
 
 ### `pinBrowsePicker` — pinned directory picker
 
@@ -150,7 +191,7 @@ fills ui-workspace's directory-flow slot. A page only receives the client
 bundles that were Loader rows when its boot graph was composed, so a surface
 added after the page loaded can never appear in that page — and swapping only
 the Host half would leave the open page driving a capability the Host no longer
-serves. The switch saves immediately (it lands in the profile patch, as
+serves. The switch saves immediately (it lands in the plugin's config file, as
 `pinBrowsePicker: false`) and the Settings row states that a restart applies it.
 The module deliberately keeps no runtime swap: half-applying would break the
 picker for the rest of the session.

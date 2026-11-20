@@ -53,8 +53,11 @@ Then run `npm install` in the profile directory and restart DSH.
 To work on a local checkout instead, replace the version with
 `link:/path/to/dsh-pocket-kit`.
 
-The bundled `cordis.patch.yml` pins the browse picker at boot. Most feature
-switches react to volatile config changes without a restart, but
+Each feature switch is stored in the plugin's own config file,
+`$DSH_HOME/plugins/dsh-pocket-kit/config.yaml`, which the Settings page reads and
+writes through the Host. It is not kept in the browser (the Web GUI's port changes
+every launch, so a browser store would reset) and not in the profile patch (that
+file is everyone's to edit). Most switches apply without a restart, but
 `pinBrowsePicker` is the exception: because the picker is a Host-backend +
 Client-surface pair mounted at boot, toggling it only takes effect after you
 restart DSH (the Settings row says so too).
@@ -62,12 +65,12 @@ restart DSH (the Settings row says so too).
 ## Develop
 
 ```sh
-npm test   # twelve suites: host, config, client, render, banner, pin-switch, logo, logo-client, resolve, force-native-host, plugin-dir, store-path
+npm test   # fourteen suites: host, config, client, render, banner, pin-switch, logo, logo-client, resolve, force-native-host, plugin-dir, store-path, switches, switches-client
 ```
 
-Add a feature: register it in `lib/features/index.js`, declare its config key in
-`lib/index.js` (`z.boolean().default(true).volatile()`), and add its copy keys to
-the client's dictionaries. See [docs/DETAIL.md](docs/DETAIL.md#adding-a-feature).
+Add a feature: register it in `lib/features/index.js`, add its switch name to
+`SWITCH_KEYS` in `lib/config-file.js`, and add its copy keys to the client's
+dictionaries. See [docs/DETAIL.md](docs/DETAIL.md#adding-a-feature).
 
 ## License
 

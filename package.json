@@ -60,9 +60,10 @@
     "sidebar-logo"
   ],
   "dependencies": {
-    "@deepseek-ai/schemastery": "^3.19.0"
+    "@deepseek-ai/schemastery": "^3.19.0",
+    "yaml": "^2.9.1"
   },
   "scripts": {
-    "test": "node test/host.mjs && node test/config.mjs && node test/client.mjs && node test/render.mjs && node test/banner.mjs && node test/pin-switch.mjs && node test/logo.mjs && node test/logo-client.mjs && node test/resolve.mjs && node test/force-native-host.mjs && node test/plugin-dir.mjs && node test/store-path.mjs"
+    "test": "node test/host.mjs && node test/config.mjs && node test/client.mjs && node test/render.mjs && node test/banner.mjs && node test/pin-switch.mjs && node test/logo.mjs && node test/logo-client.mjs && node test/resolve.mjs && node test/force-native-host.mjs && node test/plugin-dir.mjs && node test/store-path.mjs && node test/switches.mjs && node test/switches-client.mjs"
   }
 }

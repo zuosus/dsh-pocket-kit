@@ -73,10 +73,11 @@ check('mark cannot be dragged out', img?.props.draggable === false);
   check('mark renders while the image loads', first?.type === 'img');
 }
 
-// With the switch off the mark is DSH's own icon again.
+// With the switch off the mark is DSH's own icon again. The mark reads the
+// switch file, so the test pins the switch with the `switchOn` override.
 {
   hookIndex = 0; hookStore = [];
-  const off = CustomBrandMark({ size: 24, useConfig: useConfig({ customLogo: false }) });
+  const off = CustomBrandMark({ size: 24, switchOn: false });
   check('switch off restores the DSH mark', off?.type !== 'img');
 }
 
