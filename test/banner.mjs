@@ -72,6 +72,9 @@ check('restore is the primary action', buttonWith(withDraft, 'recovery.restore')
 check('copy is a quiet action', buttonWith(withDraft, 'recovery.copy')?.props.variant === 'ghost');
 check('dismiss is a quiet action', buttonWith(withDraft, 'recovery.dismiss')?.props.variant === 'ghost');
 
+const source = readFileSync(new URL('../lib/client.js', import.meta.url).pathname, 'utf8');
+check('card uses an existing surface token', source.includes('--dsw-alias-bg-layer-2') && !source.includes('--dsw-alias-bg-l2'));
+
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));
 process.exit(fail === 0 ? 0 : 1);
