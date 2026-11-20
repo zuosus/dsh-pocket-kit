@@ -70,7 +70,7 @@ check('feature label', sectionText.includes('feature.inputRecovery.label'));
 check('feature description', sectionText.includes('feature.inputRecovery.description'));
 check('new feature label', sectionText.includes('feature.forceSystemModelPicker.label'));
 check('new feature description', sectionText.includes('feature.forceSystemModelPicker.description'));
-check('new feature shows the reload hint', sectionText.includes('reloadHint'));
+check('new feature shows the restart hint', sectionText.includes('restartHint'));
 check('four switch rows', typesOf(section).filter((x) => x === 'Switch').length === 4);
 check('the force-system switch defaults off', flatten(section).filter((n) => typeof n === 'object' && n.type === 'Switch' && n.props.label === 'feature.forceSystemModelPicker.label').every((s) => s.props.checked === false));
 check('the other switches start on', flatten(section).filter((n) => typeof n === 'object' && n.type === 'Switch' && n.props.label !== 'feature.forceSystemModelPicker.label').every((s) => s.props.checked === true));

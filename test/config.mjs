@@ -10,6 +10,7 @@ const defaults = Config({});
 const plain = (v) => (v !== null && typeof v === 'object' && typeof v.get === 'function' ? v.get() : v);
 check('forceSystemModelPicker defaults off', plain(defaults.forceSystemModelPicker) === false);
 check('the other switches still default on', plain(defaults.inputRecovery) === true && plain(defaults.pinBrowsePicker) === true && plain(defaults.customLogo) === true);
+check('extraOccupants defaults to an empty list', Array.isArray(plain(defaults.extraOccupants)) && plain(defaults.extraOccupants).length === 0);
 
 const installed = [];
 const makeCtx = () => ({

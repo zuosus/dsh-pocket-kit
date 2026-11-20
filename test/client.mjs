@@ -58,7 +58,7 @@ check('exports apply', typeof exported.apply === 'function');
 check('exports inject list', Array.isArray(exported.inject));
 check('inject has the settings seats', exported.inject.includes('configForms') && exported.inject.includes('slots'));
 check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery,customLogo,forceSystemModelPicker');
-check('the force-system switch is reload-scoped', exported.FEATURES.find((f) => f.id === 'forceSystemModelPicker')?.hint === 'reloadHint');
+check('the force-system switch is restart-scoped', exported.FEATURES.find((f) => f.id === 'forceSystemModelPicker')?.restart === true);
 check('custom logo is not restart-scoped', exported.FEATURES.find((f) => f.id === 'customLogo')?.restart !== true);
 check('logo route constant', exported.LOGO_ROUTE === '/dsh-pocket-kit/logo');
 check('logo route is the only logo export', exported.DEFAULT_LOGO_FILE === undefined);
@@ -110,42 +110,18 @@ check('section id is the namespace', registrations.some((r) => r?.name === 'sett
 check('registers the nav icon', registrations.some((r) => r?.name === 'settings.section.icon' && r.id === 'dsh-pocket-kit'));
 check('nav icon is an svg component', typeof registrations.find((r) => r?.name === 'settings.section.icon')?.Component === 'function');
 
-// --- the force-system switch drives the shared picker key --------------
-// apply() must reconcile the key from Config on install, so a page that loads
-// with the switch already on shows the system picker without opening Settings.
+// --- the force-system switch is Host-side and restart-scoped -------------
+// v1 wrote a localStorage key, which cannot work: the Web GUI port changes on
+// every launch, so localStorage (origin-scoped) starts empty, and the
+// replacement picker activates before this bundle and reads it at activation.
+// The feature is now a Host-side row disable, so the Client must NOT carry a
+// driver, and the row must be marked restart-scoped.
 {
-  const storage = new Map();
-  globalThis.localStorage = {
-    getItem: (k) => (storage.has(k) ? storage.get(k) : null),
-    setItem: (k, v) => { storage.set(k, String(v)); },
-    removeItem: (k) => { storage.delete(k); },
-  };
-  const config = { forceSystemModelPicker: true };
-  let listener;
-  const forceCtx = {
-    effect(fn) { return fn(); },
-    slots: { inject(seat, body) { return body(); }, register() { return () => {}; } },
-    locale: { register() { return () => {}; }, bind() { return (k) => k; } },
-    configForms: {
-      get() {
-        return {
-          getSnapshot: () => ({ value: { ...config } }),
-          set: async () => true,
-          subscribe(fn) { listener = fn; return () => { listener = undefined; }; },
-        };
-      },
-      whileServed(ns, body) { return body(); },
-    },
-  };
-  exported.apply(forceCtx);
-  check('apply forces the system picker when the switch is on', storage.get('dshmf:mode') === 'native');
-  check('apply subscribes to the switch for live changes', typeof listener === 'function');
-
-  // Flip the switch off: the key returns to the state it had before forcing.
-  config.forceSystemModelPicker = false;
-  listener?.();
-  check('flipping the switch off stops forcing', storage.has('dshmf:mode') === false);
-  delete globalThis.localStorage;
+  const row = exported.FEATURES.find((f) => f.id === 'forceSystemModelPicker');
+  check('the force-system row exists', row !== undefined);
+  check('the force-system row is restart-scoped', row?.restart === true);
+  check('the force-system row defaults off', row?.defaultOn === false);
+  check('the client carries no localStorage picker driver', exported.__test?.createForceSystemModelPicker === undefined);
 }
 
 // --- the corner logo replaces the shell's mark -------------------------

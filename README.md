@@ -26,11 +26,11 @@ Swaps the sidebar's top-left whale mark for the whale-girl artwork bundled as `l
 
 ### Force the system model picker — `forceSystemModelPicker`
 
-When another plugin replaces the composer's model control (such as the flat
-panel from `dsh-model-flatmap`), this opt-in switch hands the seat back to DSH's
-own picker. It writes the shared `dshmf:mode = native` preference, so the next
-page load shows the system control. Leaving it off never touches your own mode
-choice.
+When another plugin occupies the composer's model control (such as the flat
+panel from `dsh-model-flatmap`, or `dsh-acp-agents`), this opt-in switch disables
+those Loader rows at startup so DSH's own picker takes over. A plugin this
+release does not know about can be named through `extraOccupants`. Note that
+disabling ACP also turns off ACP delegation. Requires a DSH restart.
 
 Details, HTTP surface and the "how it works" notes live in [docs/DETAIL.md](docs/DETAIL.md).
 
@@ -62,7 +62,7 @@ restart DSH (the Settings row says so too).
 ## Develop
 
 ```sh
-npm test   # ten suites: host, config, client, render, banner, pin-switch, logo, logo-client, resolve, force-native
+npm test   # ten suites: host, config, client, render, banner, pin-switch, logo, logo-client, resolve, force-native-host
 ```
 
 Add a feature: register it in `lib/features/index.js`, declare its config key in

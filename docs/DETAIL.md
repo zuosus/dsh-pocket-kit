@@ -135,33 +135,43 @@ picker for the rest of the session.
 ### `forceSystemModelPicker` — force the system model picker
 
 The composer's model control is the `conversation.input.model` seat. DSH ships
-its own picker there, but a third-party replacement can shadow it by registering
-the same seat at a more negative priority — `dsh-model-flatmap` does exactly
-that, and the shipped picker underneath only returns when the replacement hands
-the seat back.
+its own picker there, but a third-party plugin can shadow it by registering the
+same seat — `dsh-model-flatmap` does so at a negative priority, and
+`dsh-acp-agents` occupies it at the default priority.
 
-A replacement decides that by reading one origin-scoped `localStorage` key,
-`dshmf:mode`: `flat` keeps its own panel, `native` disposes its registration so
-the shipped picker is elected. That key is the *shared contract* this feature
-uses, which keeps it independent of any single replacement's internals.
+**Why this is a Host-side row disable, not a preference write.** The first
+attempt had the Client write the shared `dshmf:mode` localStorage key that a
+replacement reads. That cannot work in the Web GUI:
 
-With the switch **on**, the Client writes `native` so the next page load shows
-DSH's own picker. With it **off** (the default) the key is left completely
-untouched — a replacement's own choice, and yours, survive unchanged.
+| Failure | Why |
+|---|---|
+| Port changes every launch | `localStorage` is origin-scoped (scheme + host + **port**), so the key never survives a restart — the next page starts from an empty store |
+| Activation order | A replacement such as `dsh-model-flatmap` activates **before** this package (bundle order) and reads that key during activation, so a write from here always arrives too late |
+| Re-mounting | The replacement reconciles on every slot change and re-registers while its mode is not `native` |
+
+A Loader row has none of those problems: it is decided on the Host at boot, with
+no origin, no storage and no ordering race.
+
+**What it does.** While the switch is on, the Host disables the Loader rows of
+plugins known to occupy the model seat. Disabling a row removes it from the
+composition, so the shipped `ModelSelect` underneath is elected — the system
+control this feature promises.
 
 | Concern | Behaviour |
 |---|---|
 | Default | Off: installing the plugin changes nothing about the picker |
-| On | Writes `dshmf:mode = native`; the replacement steps aside at next activation |
-| Off | Never writes, never clears: your own mode choice is preserved |
-| When it applies | Next page load; the Settings row says so, because the key is read at activation |
-| Storage unavailable | Guarded read/write; the feature degrades silently, the page never breaks |
-| Host half | Deliberately inert — there is no server-side capability to install |
+| On | Disables the occupying rows during Host boot |
+| When it applies | Next DSH start; the Settings row says so |
+| Known occupants | `dsh-model-flatmap` (row `dsh-model-flatmap`), `dsh-acp-agents` (row `acp-agents`) |
+| Unknown occupants | `extraOccupants` in Config takes package names, so a plugin newer than this release can still be named |
+| Identity check | A row is only removed when its package name matches; the row id alone is not trusted, so an unrelated plugin can never be disabled by a colliding id |
+| Missing row / loader | Skipped, never an error: this feature must not be able to fail a profile boot |
+| Host half | Disables rows; there is no Client-side state |
 
-Because the key is read when a replacement activates, toggling the switch cannot
-re-compose a picker that is already mounted. The row is therefore reload-scoped
-like `pinBrowsePicker` is restart-scoped, and it says so instead of
-half-applying.
+**Disabling ACP also disables ACP delegation.** `dsh-acp-agents` provides the
+`acp_delegate` tool and the ACP providers in addition to its model control. A
+Loader row is all-or-nothing, so the Settings copy states this trade-off rather
+than hiding it.
 
 ## Adding a feature
 
