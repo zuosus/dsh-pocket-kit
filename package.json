@@ -1,6 +1,6 @@
 {
   "name": "dsh-pocket-kit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": false,
   "type": "module",
   "description": "Independent DeepSeek Harness features with their own switches: in-app directory picking, recovery of prompts swallowed by failed turns, and a bundled whale-girl corner logo.",
