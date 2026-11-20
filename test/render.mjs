@@ -68,8 +68,12 @@ check('page title', sectionText.includes('page.title'));
 check('page intro', sectionText.includes('page.intro'));
 check('feature label', sectionText.includes('feature.inputRecovery.label'));
 check('feature description', sectionText.includes('feature.inputRecovery.description'));
-check('three switch rows', typesOf(section).filter((x) => x === 'Switch').length === 3);
-check('switches start on', flatten(section).filter((n) => typeof n === 'object' && n.type === 'Switch').every((s) => s.props.checked === true));
+check('new feature label', sectionText.includes('feature.forceSystemModelPicker.label'));
+check('new feature description', sectionText.includes('feature.forceSystemModelPicker.description'));
+check('new feature shows the reload hint', sectionText.includes('reloadHint'));
+check('four switch rows', typesOf(section).filter((x) => x === 'Switch').length === 4);
+check('the force-system switch defaults off', flatten(section).filter((n) => typeof n === 'object' && n.type === 'Switch' && n.props.label === 'feature.forceSystemModelPicker.label').every((s) => s.props.checked === false));
+check('the other switches start on', flatten(section).filter((n) => typeof n === 'object' && n.type === 'Switch' && n.props.label !== 'feature.forceSystemModelPicker.label').every((s) => s.props.checked === true));
 
 const offSection = render(FeaturesSection, {
   useConfig: (sel) => sel({ status: 'ready', writable: true, value: { pinBrowsePicker: false, inputRecovery: false, customLogo: false } }),
@@ -89,9 +93,9 @@ check('read-only config disables the switch', findType(readOnlySection, 'Switch'
 const row = render(FeatureRow, { title: 'T', description: 'D', checked: true, disabled: false, failed: false, onChange: () => {}, t });
 const restartRow = render(FeatureRow, {
   title: 't', description: 'd', checked: true, disabled: false, failed: false,
-  restart: true, onChange: () => {}, t,
+  hintKey: 'restartHint', onChange: () => {}, t,
 });
-check('restart row shows the hint', JSON.stringify(restartRow).includes('restartHint'));
+check('a row with a hint shows it', JSON.stringify(restartRow).includes('restartHint'));
 const plainRow = render(FeatureRow, {
   title: 't', description: 'd', checked: true, disabled: false, failed: false,
   onChange: () => {}, t,

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Pocket Kit",
-    "description": "A collection of unrelated small features in one plugin, each independently switchable in Settings: recover a user prompt swallowed by a failed turn, pin the workspace directory picker to the in-app browser, and replace the sidebar corner logo with the bundled whale-girl artwork.",
+    "description": "A collection of unrelated small features in one plugin, each independently switchable in Settings: recover a user prompt swallowed by a failed turn, pin the workspace directory picker to the in-app browser, and replace the sidebar corner logo with the bundled whale-girl artwork, and force the composer model picker back to DSH's own system control.",
     "detail": "docs/DETAIL.md"
   }
 }

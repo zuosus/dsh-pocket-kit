@@ -2,7 +2,7 @@
 
 English · [简体中文](README.zh.md)
 
-Pocket Kit (口袋工具箱) — a small collection of independent [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) features, each with its own switch on the plugin's Settings page (all on by default).
+Pocket Kit (口袋工具箱) — a small collection of independent [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) features, each with its own switch on the plugin's Settings page (all on by default, except the opt-in model-picker override).
 
 ![Pocket Kit icon](icon.svg)
 
@@ -23,6 +23,14 @@ When a turn fails (error / interrupted / aborted) after you typed a prompt that 
 Swaps the sidebar's top-left whale mark for the whale-girl artwork bundled as `lib/assets/whale-girl.png`. The image ships with the package and is deliberately not configurable — DSH does not require SVG, because the mark is a slot that accepts any element, not a file.
 
 [![Whale-girl logo mark](lib/assets/whale-girl.png)](lib/assets/whale-girl.png)
+
+### Force the system model picker — `forceSystemModelPicker`
+
+When another plugin replaces the composer's model control (such as the flat
+panel from `dsh-model-flatmap`), this opt-in switch hands the seat back to DSH's
+own picker. It writes the shared `dshmf:mode = native` preference, so the next
+page load shows the system control. Leaving it off never touches your own mode
+choice.
 
 Details, HTTP surface and the "how it works" notes live in [docs/DETAIL.md](docs/DETAIL.md).
 
@@ -54,7 +62,7 @@ restart DSH (the Settings row says so too).
 ## Develop
 
 ```sh
-npm test   # nine suites: host, config, client, render, banner, pin-switch, logo, logo-client, resolve
+npm test   # ten suites: host, config, client, render, banner, pin-switch, logo, logo-client, resolve, force-native
 ```
 
 Add a feature: register it in `lib/features/index.js`, declare its config key in

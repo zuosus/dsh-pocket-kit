@@ -2,7 +2,7 @@
 
 [English](README.md) · 简体中文
 
-Pocket Kit（口袋工具箱）— 一组彼此独立的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 小功能，每个功能都能在插件设置页单独开关（默认全部开启）。
+Pocket Kit（口袋工具箱）— 一组彼此独立的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 小功能，每个功能都能在插件设置页单独开关（除模型选择器覆盖为需手动开启外，默认全部开启）。
 
 ![Pocket Kit 图标](icon.svg)
 

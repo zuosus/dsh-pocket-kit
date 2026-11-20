@@ -57,7 +57,8 @@ const exported = captured.factory(requireShim);
 check('exports apply', typeof exported.apply === 'function');
 check('exports inject list', Array.isArray(exported.inject));
 check('inject has the settings seats', exported.inject.includes('configForms') && exported.inject.includes('slots'));
-check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery,customLogo');
+check('feature list', exported.FEATURES.map((f) => f.id).join(',') === 'pinBrowsePicker,inputRecovery,customLogo,forceSystemModelPicker');
+check('the force-system switch is reload-scoped', exported.FEATURES.find((f) => f.id === 'forceSystemModelPicker')?.hint === 'reloadHint');
 check('custom logo is not restart-scoped', exported.FEATURES.find((f) => f.id === 'customLogo')?.restart !== true);
 check('logo route constant', exported.LOGO_ROUTE === '/dsh-pocket-kit/logo');
 check('logo route is the only logo export', exported.DEFAULT_LOGO_FILE === undefined);
@@ -108,6 +109,44 @@ check('registers the composer dock', registrations.some((r) => r?.name === 'conv
 check('section id is the namespace', registrations.some((r) => r?.name === 'settings.section' && r.id === 'dsh-pocket-kit'));
 check('registers the nav icon', registrations.some((r) => r?.name === 'settings.section.icon' && r.id === 'dsh-pocket-kit'));
 check('nav icon is an svg component', typeof registrations.find((r) => r?.name === 'settings.section.icon')?.Component === 'function');
+
+// --- the force-system switch drives the shared picker key --------------
+// apply() must reconcile the key from Config on install, so a page that loads
+// with the switch already on shows the system picker without opening Settings.
+{
+  const storage = new Map();
+  globalThis.localStorage = {
+    getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+    setItem: (k, v) => { storage.set(k, String(v)); },
+    removeItem: (k) => { storage.delete(k); },
+  };
+  const config = { forceSystemModelPicker: true };
+  let listener;
+  const forceCtx = {
+    effect(fn) { return fn(); },
+    slots: { inject(seat, body) { return body(); }, register() { return () => {}; } },
+    locale: { register() { return () => {}; }, bind() { return (k) => k; } },
+    configForms: {
+      get() {
+        return {
+          getSnapshot: () => ({ value: { ...config } }),
+          set: async () => true,
+          subscribe(fn) { listener = fn; return () => { listener = undefined; }; },
+        };
+      },
+      whileServed(ns, body) { return body(); },
+    },
+  };
+  exported.apply(forceCtx);
+  check('apply forces the system picker when the switch is on', storage.get('dshmf:mode') === 'native');
+  check('apply subscribes to the switch for live changes', typeof listener === 'function');
+
+  // Flip the switch off: the key returns to the state it had before forcing.
+  config.forceSystemModelPicker = false;
+  listener?.();
+  check('flipping the switch off stops forcing', storage.has('dshmf:mode') === false);
+  delete globalThis.localStorage;
+}
 
 // --- the corner logo replaces the shell's mark -------------------------
 const brand = registrations.find((r) => r?.name === 'sidebar.brand.mark');

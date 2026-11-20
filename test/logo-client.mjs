@@ -94,7 +94,7 @@ const page = render(FeaturesSection, {
   t,
 });
 const switches = page.filter((n) => typeof n === 'object' && n.type === 'Switch');
-check('page renders three switches', switches.length === 3);
+check('page renders four switches', switches.length === 4);
 check('page renders no inputs (nothing to configure)', page.filter((n) => typeof n === 'object' && n.type === 'input').length === 0);
 check('page shows the logo feature label', page.some((n) => n === 'feature.customLogo.label'));
 check('page shows the logo feature description', page.some((n) => n === 'feature.customLogo.description'));

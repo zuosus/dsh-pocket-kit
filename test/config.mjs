@@ -5,6 +5,12 @@ const check = (n, ok) => { if (ok) { pass += 1; console.log('  ok  ' + n); } els
 
 check('name', name === 'dsh-pocket-kit');
 
+const defaults = Config({});
+// A volatile key is a live reference; unwrap it the way the Host does.
+const plain = (v) => (v !== null && typeof v === 'object' && typeof v.get === 'function' ? v.get() : v);
+check('forceSystemModelPicker defaults off', plain(defaults.forceSystemModelPicker) === false);
+check('the other switches still default on', plain(defaults.inputRecovery) === true && plain(defaults.pinBrowsePicker) === true && plain(defaults.customLogo) === true);
+
 const installed = [];
 const makeCtx = () => ({
   effect(fn) { return fn(); },
@@ -35,6 +41,17 @@ check('default installs every feature', installed.length === 3);
 installed.length = 0;
 apply(makeCtx(), Config({ inputRecovery: false }));
 check('inputRecovery off leaves the others installed', installed.length === 2);
+
+// The new feature is Host-inert: it must install without throwing and without
+// claiming a Host capability, whether its switch is on or off.
+let forceThrew = false;
+try {
+  apply(makeCtx(), Config({ forceSystemModelPicker: true }));
+  apply(makeCtx(), Config({ forceSystemModelPicker: false }));
+} catch {
+  forceThrew = true;
+}
+check('forceSystemModelPicker installs without a Host capability', forceThrew === false);
 
 installed.length = 0;
 apply(makeCtx(), undefined);
