@@ -28,19 +28,23 @@ Pocket Kit（口袋工具箱）— 一组彼此独立的 [DeepSeek Harness](http
 
 ## 安装
 
-插件是一个链接到本地 profile 的 npm 包（无需发布到 npm）：
+已发布为 [`dsh-pocket-kit`](https://www.npmjs.com/package/dsh-pocket-kit)。把它加入 DSH profile：
 
 ```jsonc
 // ~/.dsh/profiles/<profile>/package.json
 {
   "dependencies": {
-    "dsh-pocket-kit": "link:/path/to/dsh-pocket-kit"
+    "dsh-pocket-kit": "^1.0.1"
   },
   "dsh": { "profile": { "bundles": [ "dsh-pocket-kit", /* ... */ ] } }
 }
 ```
 
-然后在该 profile 目录运行 `npm install`（或在 profile 的 `node_modules/` 中放一个指向本仓库的符号链接），并重启 DSH。随包提供的 `cordis.patch.yml` 会在启动时固定目录选择器。大多数功能开关会在配置变更后立即生效，但 `pinBrowsePicker` 是例外：目录选择器是启动时挂载的 Host 后端 + Client 界面组合，切换后需要重启 DSH 才会生效（设置页中对应行也会提示这一点）。
+然后在该 profile 目录运行 `npm install`，并重启 DSH。
+
+如果要在本地 checkout 上开发，把版本号换成 `link:/path/to/dsh-pocket-kit` 即可。
+
+随包提供的 `cordis.patch.yml` 会在启动时固定目录选择器。大多数功能开关会在配置变更后立即生效，但 `pinBrowsePicker` 是例外：目录选择器是启动时挂载的 Host 后端 + Client 界面组合，切换后需要重启 DSH 才会生效（设置页中对应行也会提示这一点）。
 
 ## 开发
 

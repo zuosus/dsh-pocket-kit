@@ -28,25 +28,28 @@ Details, HTTP surface and the "how it works" notes live in [docs/DETAIL.md](docs
 
 ## Install
 
-The plugin is a local npm package linked into your profile (no npm publish needed):
+Published as [`dsh-pocket-kit`](https://www.npmjs.com/package/dsh-pocket-kit). Add it to your DSH profile:
 
 ```jsonc
 // ~/.dsh/profiles/<profile>/package.json
 {
   "dependencies": {
-    "dsh-pocket-kit": "link:/path/to/dsh-pocket-kit"
+    "dsh-pocket-kit": "^1.0.1"
   },
   "dsh": { "profile": { "bundles": [ "dsh-pocket-kit", /* ... */ ] } }
 }
 ```
 
-Then `npm install` in the profile directory (or point a symlink in the profile's
-`node_modules/` at the checkout) and restart DSH. The bundled
-`cordis.patch.yml` pins the browse picker at boot. Most feature switches react to
-volatile config changes without a restart, but `pinBrowsePicker` is the
-exception: because the picker is a Host-backend + Client-surface pair mounted at
-boot, toggling it only takes effect after you restart DSH (the Settings row says
-so too).
+Then run `npm install` in the profile directory and restart DSH.
+
+To work on a local checkout instead, replace the version with
+`link:/path/to/dsh-pocket-kit`.
+
+The bundled `cordis.patch.yml` pins the browse picker at boot. Most feature
+switches react to volatile config changes without a restart, but
+`pinBrowsePicker` is the exception: because the picker is a Host-backend +
+Client-surface pair mounted at boot, toggling it only takes effect after you
+restart DSH (the Settings row says so too).
 
 ## Develop
 
