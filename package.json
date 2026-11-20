@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "private": false,
   "type": "module",
-  "description": "A small collection of independent DSH features. It pins the workspace directory picker to the in-app browse backend, and adds features with their own switches (today: recovering a prompt a failed turn swallowed).",
+  "description": "Independent DeepSeek Harness features with their own switches: in-app directory picking, recovery of prompts swallowed by failed turns, and a bundled whale-girl corner logo.",
   "icon": "./icon.svg",
   "main": "lib/index.js",
   "exports": {
@@ -43,6 +43,22 @@
     }
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zuosus/dsh-pocket-kit.git"
+  },
+  "homepage": "https://github.com/zuosus/dsh-pocket-kit#readme",
+  "bugs": {
+    "url": "https://github.com/zuosus/dsh-pocket-kit/issues"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "input-recovery",
+    "directory-picker",
+    "sidebar-logo"
+  ],
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.19.0"
   },
