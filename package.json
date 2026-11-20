@@ -1,6 +1,6 @@
 {
   "name": "dsh-pocket-kit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
   "type": "module",
   "description": "A small collection of independent DSH features. It pins the workspace directory picker to the in-app browse backend, and adds features with their own switches (today: recovering a prompt a failed turn swallowed).",
