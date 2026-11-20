@@ -74,6 +74,32 @@ check('dismiss is a quiet action', buttonWith(withDraft, 'recovery.dismiss')?.pr
 
 const source = readFileSync(new URL('../lib/client.js', import.meta.url).pathname, 'utf8');
 check('card uses an existing surface token', source.includes('--dsw-alias-bg-layer-2') && !source.includes('--dsw-alias-bg-l2'));
+// The dock is wider than the composer card, so the banner must carry the shell's
+// own dock-panel width formula or it overhangs the input box (seen in the wild).
+check('banner borrows the shell dock width formula',
+  source.includes('--dsh-composer-card-max-width') && source.includes('--dsh-composer-dock-inset') && source.includes('--dsh-composer-side-clearance'));
+check('banner is centred in the dock', source.includes('margin:0 auto 8px'));
+
+// --- stylesheet refresh on hot update ----------------------------------
+// A hot update re-runs this module while the page still holds the previous
+// <style> element. Returning early there pairs the NEW markup with the OLD
+// stylesheet: that is exactly how the redesigned banner shipped looking
+// unstyled (new nodes, old typography). The refresh must overwrite in place.
+const styleEl = { id: 'dsh-pocket-kit/styles', textContent: '.pbp-recovery{border-radius:10px}' };
+let appended = 0;
+globalThis.document = {
+  getElementById: (id) => (id === styleEl.id ? styleEl : null),
+  createElement: () => ({ id: '', textContent: '' }),
+  head: { appendChild: () => { appended += 1; } },
+};
+check('insertStyles is reachable for the refresh test', typeof mod.__test.insertStyles === 'function');
+mod.__test.insertStyles();
+check('hot update overwrites the stale stylesheet', styleEl.textContent.includes('pbp-recoveryEyebrow'));
+check('hot update does not stack a second style tag', appended === 0);
+for (const name of ['pbp-recoveryHeader', 'pbp-recoveryEyebrow', 'pbp-recoveryPreview', 'pbp-recoveryFooter', 'pbp-recoveryCauseText']) {
+  check('stylesheet carries ' + name, styleEl.textContent.includes(name));
+}
+delete globalThis.document;
 
 console.log('');
 console.log(fail === 0 ? 'PASS ' + pass : 'FAILED ' + fail + ' of ' + (pass + fail));
